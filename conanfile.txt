@@ -1,0 +1,5 @@
+[requires]
+xplane_sdk/3.0.1@rhard/testing
+
+[generators]
+cmake
