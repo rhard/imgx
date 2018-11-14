@@ -45,6 +45,7 @@ PLUGIN_API int XPluginStart(char * outName, char * outSig, char * outDesc) {
     int decorate = 1;
 
     gui = std::make_shared<Gui>();
+    gui->Draw();
 
     return 1;
 }

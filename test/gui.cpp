@@ -9,5 +9,6 @@ Gui::Gui() : ImgX() {
 }
 
 void Gui::buildInterface() {
-
+    ImGui::Begin("Hallo world");
+    ImGui::End();
 }

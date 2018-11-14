@@ -22,46 +22,57 @@ private:
             int inCounter,
             void *inRefcon);
 
-    //    static void drawWindowCB(
-//            XPLMWindowID inWindowID,
-//            void *inRefcon);
-//
-//    static int handleMouseClickCB(
-//            XPLMWindowID inWindowID,
-//            int x, int y,
-//            XPLMMouseStatus inMouse,
-//            void *inRefcon);
-//
-//    static void handleKeyFuncCB(
-//            XPLMWindowID inWindowID,
-//            char inKey,
-//            XPLMKeyFlags inFlags,
-//            char inVirtualKey,
-//            void *inRefcon,
-//            int losingFocus);
-//
-//    static XPLMCursorStatus handleCursorFuncCB(
-//            XPLMWindowID inWindowID,
-//            int x, int y,
-//            void *inRefcon);
-//
-//    static int handleMouseWheelFuncCB(
-//            XPLMWindowID inWindowID,
-//            int x, int y,
-//            int wheel,
-//            int clicks,
-//            void *inRefcon);
-//
-//    static int handleRightClickFuncCB(
-//            XPLMWindowID inWindowID,
-//            int x, int y,
-//            XPLMMouseStatus inMouse,
-//            void *inRefcon);
-//
-//    int handleMouseClickGeneric(
-//            int x, int y,
-//            XPLMMouseStatus inMouse,
-//            int button = 0);
+    static void drawWindowCB(
+            XPLMWindowID inWindowID,
+            void *inRefcon);
+
+    static int handleMouseClickCB(
+            XPLMWindowID inWindowID,
+            int x, int y,
+            XPLMMouseStatus inMouse,
+            void *inRefcon);
+
+    static void handleKeyFuncCB(
+            XPLMWindowID inWindowID,
+            char inKey,
+            XPLMKeyFlags inFlags,
+            char inVirtualKey,
+            void *inRefcon,
+            int losingFocus);
+
+    static XPLMCursorStatus handleCursorFuncCB(
+            XPLMWindowID inWindowID,
+            int x, int y,
+            void *inRefcon);
+
+    static int handleMouseWheelFuncCB(
+            XPLMWindowID inWindowID,
+            int x, int y,
+            int wheel,
+            int clicks,
+            void *inRefcon);
+
+    static int handleRightClickFuncCB(
+            XPLMWindowID inWindowID,
+            int x, int y,
+            XPLMMouseStatus inMouse,
+            void *inRefcon);
+
+    int handleMouseClickGeneric(
+            int x, int y,
+            XPLMMouseStatus inMouse,
+            int button = 0);
+
+    static void initPlatformInterface();
+
+    static void shutdownPlatformInterface();
+
+    static void createWindow(ImGuiViewport* viewport);
+
+    static void destroyWindow(ImGuiViewport* viewport);
+
+    static void setWindowSize(ImGuiViewport* viewport, ImVec2 size);
+
 //
 //    void renderImGui(ImDrawData *draw_data);
 //
@@ -87,10 +98,12 @@ private:
     XPLMFlightLoopID mFlightLoop;
     bool mIsInVR = false;
 //
-//    int mTop;
-//    int mBottom;
-//    int mLeft;
-//    int mRight;
+    int mTop;
+    int mBottom;
+    int mLeft;
+    int mRight;
+    int mWidth;
+    int mHeight;
 //
     XPLMWindowLayer mPreferredLayer;
 

@@ -43,5 +43,5 @@ set_target_properties(imgx_test PROPERTIES OUTPUT_NAME "imgx_test")
 set_target_properties(imgx_test PROPERTIES SUFFIX ".xpl")
 
 ADD_CUSTOM_TARGET(deploy ALL
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:imgx_test> "Z:/X-Plane 11/Resources/plugins/imgx_test/win_x64"
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:imgx_test> "Z:/X-Plane 11/Resources/plugins/imgx_test/win_x64/"
         DEPENDS imgx_test)

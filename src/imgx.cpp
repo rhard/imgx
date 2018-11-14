@@ -11,24 +11,39 @@
 
 #include <Gl/GL.h>
 
-static XPLMDataRef		gVrEnabledRef			= nullptr;
-static XPLMDataRef		gModelviewMatrixRef		= nullptr;
-static XPLMDataRef		gViewportRef			= nullptr;
-static XPLMDataRef		gProjectionMatrixRef	= nullptr;
+static XPLMDataRef gVrEnabledRef = nullptr;
+static XPLMDataRef gModelviewMatrixRef = nullptr;
+static XPLMDataRef gViewportRef = nullptr;
+static XPLMDataRef gProjectionMatrixRef = nullptr;
+
+struct ViewportData
+{
+    ImgX * thisImgx;
+    ViewportData(){thisImgx = nullptr;}
+};
 
 ImgX::ImgX(XPLMWindowLayer layer) : mPreferredLayer(layer) {
 
-    static bool first_init=false;
+    static bool first_init = false;
     if (!first_init) {
         gVrEnabledRef = XPLMFindDataRef("sim/graphics/VR/enabled");
         gModelviewMatrixRef = XPLMFindDataRef("sim/graphics/view/modelview_matrix");
         gViewportRef = XPLMFindDataRef("sim/graphics/view/viewport");
         gProjectionMatrixRef = XPLMFindDataRef("sim/graphics/view/projection_matrix");
-        first_init=true;
+        first_init = true;
     }
 
     ImGui::CreateContext();
-    auto io = ImGui::GetIO();
+    auto &io = ImGui::GetIO();
+
+    // We can create multi-viewports
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+    io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        initPlatformInterface();
 
     // we render ourselves, we don't use the DrawListsFunc
     io.RenderDrawListsFn = nullptr;
@@ -68,6 +83,7 @@ ImgX::ImgX(XPLMWindowLayer layer) : mPreferredLayer(layer) {
 
 ImgX::~ImgX() {
     XPLMDestroyFlightLoop(mFlightLoop);
+    shutdownPlatformInterface();
     ImGui::DestroyContext();
 }
 
@@ -76,12 +92,12 @@ void ImgX::configureImguiContext() {
 }
 
 void ImgX::Draw() {
-
+    XPLMScheduleFlightLoop(mFlightLoop, -1.0f, 1);
 }
 
 void ImgX::init() {
 
-    auto io = ImGui::GetIO();
+    auto &io = ImGui::GetIO();
 
     // disable window rounding since we're not rendering the frame anyway.
     auto &style = ImGui::GetStyle();
@@ -91,7 +107,7 @@ void ImgX::init() {
     configureImguiContext();
 
     // bind the font
-    unsigned char* pixels;
+    unsigned char *pixels;
     int width, height;
     io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
 
@@ -105,7 +121,7 @@ void ImgX::init() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
-    io.Fonts->TexID = (void *)(intptr_t)(texNum);
+    io.Fonts->TexID = (void *) (intptr_t) (texNum);
 
     // disable OSX-like keyboard behaviours always - we don't have the keymapping for it.
     io.ConfigMacOSXBehaviors = false;
@@ -115,7 +131,17 @@ float
 ImgX::flightCB(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void *inRefcon) {
 
     auto thisImgx = reinterpret_cast<ImgX *>(inRefcon);
-    auto io = ImGui::GetIO();
+    auto &io = ImGui::GetIO();
+
+    // transfer the window geometry to ImGui
+    XPLMGetScreenBoundsGlobal(&thisImgx->mLeft, &thisImgx->mTop, &thisImgx->mRight, &thisImgx->mBottom);
+
+    thisImgx->mWidth = thisImgx->mRight - thisImgx->mLeft;
+    thisImgx->mHeight = thisImgx->mTop - thisImgx->mBottom;
+
+    io.DisplaySize = ImVec2(static_cast<float>(thisImgx->mWidth), static_cast<float>(thisImgx->mHeight));
+    // in boxels, we're always scale 1, 1.
+    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
     io.DeltaTime = inElapsedSinceLastCall;
 
@@ -123,9 +149,83 @@ ImgX::flightCB(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightL
     // Call user defined ImGui interface
     thisImgx->buildInterface();
     ImGui::EndFrame();
+    ImGui::UpdatePlatformWindows();
 
     //Update ImGui but not draw. Actual drawing will happen in window draw callbacks
     ImGui::Render();
 
     return -1.0f;
+}
+
+void ImgX::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
+
+}
+
+int ImgX::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void *inRefcon) {
+    return 0;
+}
+
+void ImgX::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey, XPLMKeyFlags inFlags, char inVirtualKey, void *inRefcon,
+                           int losingFocus) {
+
+}
+
+XPLMCursorStatus ImgX::handleCursorFuncCB(XPLMWindowID inWindowID, int x, int y, void *inRefcon) {
+    return 0;
+}
+
+int ImgX::handleMouseWheelFuncCB(XPLMWindowID inWindowID, int x, int y, int wheel, int clicks, void *inRefcon) {
+    return 0;
+}
+
+int ImgX::handleRightClickFuncCB(XPLMWindowID inWindowID, int x, int y, XPLMMouseStatus inMouse, void *inRefcon) {
+    return 0;
+}
+
+int ImgX::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse, int button) {
+    return 0;
+}
+
+void ImgX::initPlatformInterface() {
+    auto &platform_io = ImGui::GetPlatformIO();
+    platform_io.Platform_CreateWindow = createWindow;
+    platform_io.Platform_DestroyWindow = destroyWindow;
+    platform_io.Platform_SetWindowSize = setWindowSize;
+    platform_io.Platform_GetWindowSize = createWindow;
+    platform_io.Platform_DestroyWindow = destroyWindow;
+    platform_io.Platform_SetWindowSize = setWindowSize;
+}
+
+void ImgX::shutdownPlatformInterface() {
+    ImGui::DestroyPlatformWindows();
+}
+
+void ImgX::createWindow(ImGuiViewport *viewport) {
+
+    XPLMCreateWindow_t windowParams = {
+            sizeof(windowParams),
+            50,
+            10,
+            500,
+            1000,
+            0,
+            drawWindowCB,
+            handleMouseClickCB,
+            handleKeyFuncCB,
+            handleCursorFuncCB,
+            handleMouseWheelFuncCB,
+            reinterpret_cast<void *>(viewport),
+            3,
+            xplm_WindowLayerFloatingWindows,
+            handleRightClickFuncCB,
+    };
+    viewport->PlatformHandle = XPLMCreateWindowEx(&windowParams);
+}
+
+void ImgX::destroyWindow(ImGuiViewport *viewport) {
+
+}
+
+void ImgX::setWindowSize(ImGuiViewport *viewport, ImVec2 size) {
+
 }
