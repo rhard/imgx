@@ -10,6 +10,16 @@ else()
     message(FATAL_ERROR "Please, use conan package manager or create own build script")
 endif()
 
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_CXX_FLAGS_RELEASE "/MT")
+    set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+endif()
+
+add_definitions(-DXPLM200=1 -DXPLM210=1 -DXPLM300=1 -DXPLM301=1)
+
+include_directories(imgui src)
+
 FILE(GLOB HEADER_SRCS
         src/*.h
         test/*.h
@@ -25,8 +35,8 @@ FILE(GLOB CPP_SRCS
         imgui/imgui_widgets.cpp
         )
 
-add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS})
-target_link_libraries(imgx_test CONAN_PKG::xplane_sdk)
+add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/gui.cpp test/gui.h)
+target_link_libraries(imgx_test CONAN_PKG::xplane_sdk opengl32)
 
 set_target_properties(imgx_test PROPERTIES PREFIX "")
 set_target_properties(imgx_test PROPERTIES OUTPUT_NAME "imgx_test")
