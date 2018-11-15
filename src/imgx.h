@@ -67,27 +67,43 @@ private:
 
     static void shutdownPlatformInterface();
 
-    static void createWindow(ImGuiViewport* viewport);
+    static void createWindow(ImGuiViewport *viewport);
 
-    static void destroyWindow(ImGuiViewport* viewport);
+    static void destroyWindow(ImGuiViewport *viewport);
 
-    static void setWindowSize(ImGuiViewport* viewport, ImVec2 size);
+    static void setWindowSize(ImGuiViewport *viewport, ImVec2 size);
+
+    static ImVec2 getWindowSize(ImGuiViewport *viewport);
+
+    static void setWindowPos(ImGuiViewport *viewport, ImVec2 size);
+
+    static ImVec2 getWindowPos(ImGuiViewport *viewport);
+
+    static void setWindowTitle(ImGuiViewport *viewport, const char *title);
+
+    static void showWindow(ImGuiViewport *viewport);
+
+    static void setWindowFocus(ImGuiViewport *viewport);
+
+    static bool getWindowFocus(ImGuiViewport *viewport);
+
 
 //
 //    void renderImGui(ImDrawData *draw_data);
 //
 //    void updateImgui();
 //
-//    void updateMatrices();
+    static void updateMatrices();
+
 //
-//    void boxelsToNative(int x, int y, int &outX, int &outY);
+    static void boxelsToNative(int x, int y, int &outX, int &outY);
+
+    static void translateImguiToBoxel(float inX, float inY, int &outX, int &outY);
+
+    static void translateToImguiSpace(int inX, int inY, float &outX, float &outY);
+
 //
-//    void translateImguiToBoxel(float inX, float inY, int &outX, int &outY);
-//
-//    void translateToImguiSpace(int inX, int inY, float &outX, float &outY);
-//
-    float mModelView[16], mProjection[16];
-    int mViewport[4];
+
 //    bool mSelfDestruct;
 //
 //    std::string mWindowTitle;
@@ -98,12 +114,6 @@ private:
     XPLMFlightLoopID mFlightLoop;
     bool mIsInVR = false;
 //
-    int mTop;
-    int mBottom;
-    int mLeft;
-    int mRight;
-    int mWidth;
-    int mHeight;
 //
     XPLMWindowLayer mPreferredLayer;
 
