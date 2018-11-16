@@ -35,7 +35,7 @@ FILE(GLOB CPP_SRCS
         imgui/imgui_widgets.cpp
         )
 
-add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/gui.cpp test/gui.h)
+add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/testwindow.cpp test/testwindow.h)
 target_link_libraries(imgx_test CONAN_PKG::xplane_sdk opengl32)
 
 set_target_properties(imgx_test PROPERTIES PREFIX "")

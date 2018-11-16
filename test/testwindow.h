@@ -5,13 +5,13 @@
 #ifndef IMGX_GUI_H
 #define IMGX_GUI_H
 
-#include "imgx.h"
+#include "imgwindow.h"
 
-class Gui : public ImgX {
+class TestWindow : public ImgWindow {
 
 public:
-    Gui();
-    ~Gui() final = default;
+    explicit TestWindow(ImFontAtlas *fontAtlas = nullptr);
+    ~TestWindow() final = default;
 
 protected:
     void buildInterface() override;
