@@ -146,6 +146,11 @@ protected:
      */
     void SetWindowTitle(const std::string &title);
 
+    void SetWindowResizingLimits(int                  inMinWidthBoxels,
+                                 int                  inMinHeightBoxels,
+                                 int                  inMaxWidthBoxels,
+                                 int                  inMaxHeightBoxels);
+
     /** moveForVR() is an internal helper for moving the window to either it's
      * preferred layer or the VR layer depending on if the headset is in use.
      */

@@ -468,6 +468,11 @@ ImgWindow::SetWindowTitle(const std::string &title) {
     XPLMSetWindowTitle(mWindowID, mWindowTitle.c_str());
 }
 
+void ImgWindow::SetWindowResizingLimits(int inMinWidthBoxels, int inMinHeightBoxels, int inMaxWidthBoxels, int inMaxHeightBoxels)
+{
+    XPLMSetWindowResizingLimits(mWindowID, inMinWidthBoxels, inMinHeightBoxels, inMaxWidthBoxels, inMaxHeightBoxels);
+}
+
 void
 ImgWindow::SetVisible(bool inIsVisible) {
     if (inIsVisible)
