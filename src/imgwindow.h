@@ -94,6 +94,7 @@ private:
     float mModelView[16], mProjection[16];
     int mViewport[4];
     bool mSelfDestruct;
+    bool mSelfHide;
 
     std::string mWindowTitle;
 
@@ -180,6 +181,8 @@ protected:
      */
     void SafeDelete();
 
+    void SafeHide();
+
 public:
     virtual ~ImgWindow();
 
@@ -191,6 +194,7 @@ public:
      * hidden.
      */
     virtual void SetVisible(bool inIsVisible);
+
 
     /** GetVisible() returns the current window visibility.
      * @return true if the window is visible, false otherwise.

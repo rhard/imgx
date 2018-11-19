@@ -32,6 +32,7 @@ void ImgWindow::init(
     mIsInVR = false;
     mPreferredLayer = layer;
     mSelfDestruct = false;
+    mSelfHide = false;
     mFirstRender = true;
     mDecoration = decoration;
 
@@ -171,6 +172,7 @@ ImgWindow::boxelsToNative(int x, int y, int &outX, int &outY) {
 void
 ImgWindow::renderImGui() {
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+    ImGui::SetCurrentContext(mImGuiContext);
     ImGuiIO &io = ImGui::GetIO();
     ImDrawData *draw_data = ImGui::GetDrawData();
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
@@ -268,6 +270,8 @@ ImgWindow::translateImguiToBoxel(float inX, float inY, int &outX, int &outY) {
 
 void
 ImgWindow::updateImGui() {
+
+    ImGui::SetCurrentContext(mImGuiContext);
     auto &io = ImGui::GetIO();
 
     // transfer the window geometry to ImGui
@@ -326,6 +330,11 @@ ImgWindow::drawWindowCB(XPLMWindowID /* inWindowID */inWindowID, void *inRefcon)
     ImGui::Render();
 
     thisWindow->renderImGui();
+
+    if (thisWindow->mSelfHide) {
+        XPLMSetWindowIsVisible(thisWindow->mWindowID, false);
+        thisWindow->mSelfHide = false;
+    }
 
     if (thisWindow->mSelfDestruct) {
         delete thisWindow;
@@ -518,4 +527,9 @@ ImgWindow::OnShow() {
 void
 ImgWindow::SafeDelete() {
     mSelfDestruct = true;
+}
+
+void ImgWindow::SafeHide()
+{
+    mSelfHide = true;
 }
