@@ -112,6 +112,10 @@ private:
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
 
+    static const char *getClipboardImGuiWrapper(void *user_data);
+    static void setClipboardImGuiWrapper(void *user_data, const char *text);
+    static bool getTextFromClipboard(std::string &outText);
+    static bool setTextToClipboard(const std::string &inText);
 protected:
     /** mFirstRender can be checked during buildInterface() to see if we're
      * being rendered for the first time or not.  This is particularly

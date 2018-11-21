@@ -46,6 +46,9 @@ void ImgWindow::init(
         gProjectionMatrixRef = XPLMFindDataRef("sim/graphics/view/projection_matrix");
         first_init = true;
     }
+    // clipboard data
+    io.SetClipboardTextFn = setClipboardImGuiWrapper;
+    io.GetClipboardTextFn = getClipboardImGuiWrapper;
 
     // we render ourselves, we don't use the DrawListsFunc
     io.RenderDrawListsFn = nullptr;
@@ -74,7 +77,6 @@ void ImgWindow::init(
 
     // disable window rounding since we're not rendering the frame anyway.
     auto &style = ImGui::GetStyle();
-
     if(decoration == xplm_WindowDecorationRoundRectangle)
         style.WindowRounding = 0;
     else
@@ -532,4 +534,155 @@ ImgWindow::SafeDelete() {
 void ImgWindow::SafeHide()
 {
     mSelfHide = true;
+}
+
+const char* ImgWindow::getClipboardImGuiWrapper(void* user_data)
+{
+    static std::string text;
+    if (getTextFromClipboard(text))
+        return text.c_str();
+    else
+        return "";
+}
+
+void ImgWindow::setClipboardImGuiWrapper(void* user_data, const char* text)
+{
+    std::string _text(text);
+    setTextToClipboard(_text);
+}
+
+bool	ImgWindow::getTextFromClipboard(std::string& outText)
+{
+#if IBM
+    HGLOBAL   	hglb;
+    LPSTR    	lptstr;
+    bool		retVal = false;
+    static XPLMDataRef hwndDataRef = XPLMFindDataRef("sim/operation/windows/system_window");
+    HWND hwndMain = (HWND) XPLMGetDatai(hwndDataRef);
+
+    if (!IsClipboardFormatAvailable(CF_TEXT))
+        return false;
+
+    if (!OpenClipboard(hwndMain))
+        return false;
+
+    hglb = GetClipboardData(CF_TEXT);
+    if (hglb != NULL)
+    {
+        lptstr = (LPSTR)GlobalLock(hglb);
+        if (lptstr != NULL)
+        {
+            outText = lptstr;
+            GlobalUnlock(hglb);
+            retVal = true;
+        }
+    }
+
+    CloseClipboard();
+
+    return retVal;
+#endif
+#if APL
+    return GetOSXClipboard(outText);
+#endif
+#if LIN
+    Display* display = XOpenDisplay(nullptr);
+    if(display == nullptr) {
+        return false;
+    }
+    // Need a window to pass into the conversion request.
+    int black = BlackPixel (display, DefaultScreen (display));
+    Window root = XDefaultRootWindow (display);
+    Window window = XCreateSimpleWindow (display, root, 0, 0, 1, 1, 0, black, black);
+    // Get/create the CLIPBOARD atom.
+    // TODO(jason-watkins): Should we really ever create this atom? My limited knowledge of Linux is failing me here.
+    Atom clipboard = XInternAtom (display, "CLIPBOARD", False);
+    // Get/create an atom to represent datareftool
+    Atom prop = XInternAtom(display, "DRT_DATA", False);
+
+    // Request that the clipboard value be converted to a string
+    XConvertSelection(display, clipboard, XA_STRING, prop, window, CurrentTime);
+    XSync (display, False);
+
+    // Spin several times waiting for the conversion to trigger a SelectionNotify
+    // event.
+    Bool keep_waiting = True;
+    for(int i = 0; keep_waiting && i < 200; ++i)
+    {
+        XEvent event;
+        XNextEvent(display, &event);
+        switch (event.type) {
+        case SelectionNotify:
+            if (event.xselection.selection != clipboard) {
+                break;
+            }
+            if (event.xselection.property == None) {
+                keep_waiting = False;
+            }
+            else {
+                int format;
+                Atom target;
+                unsigned char * value;
+                unsigned long length;
+                unsigned long bytesafter;
+                XGetWindowProperty (event.xselection.display,
+                                    event.xselection.requestor,
+                                    event.xselection.property, 0L, 1000000,
+                                    False, (Atom)AnyPropertyType, &target,
+                                    &format, &length, &bytesafter, &value);
+                outText = (char *)value;
+                XFree(value);
+                keep_waiting = False;
+                XDeleteProperty (event.xselection.display,
+                                 event.xselection.requestor,
+                                 event.xselection.property);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    XCloseDisplay(display);
+    return true;
+#endif
+}
+
+bool    ImgWindow::setTextToClipboard(const std::string& inText)
+{
+#if IBM
+    LPSTR  lptstrCopy;
+    HGLOBAL hglbCopy;
+    static XPLMDataRef hwndDataRef = XPLMFindDataRef("sim/operation/windows/system_window");
+    HWND hwndMain = (HWND) XPLMGetDatai(hwndDataRef);
+
+    if (!OpenClipboard(hwndMain))
+        return false;
+    EmptyClipboard();
+
+    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, sizeof(TCHAR) * (inText.length() + 1));
+    if (hglbCopy == NULL)
+    {
+        CloseClipboard();
+        return false;
+    }
+
+    lptstrCopy = (LPSTR)GlobalLock(hglbCopy);
+    strcpy(lptstrCopy, inText.c_str());
+    GlobalUnlock(hglbCopy);
+
+    SetClipboardData(CF_TEXT, hglbCopy);
+    CloseClipboard();
+    return true;
+#endif
+#if APL
+    return SetOSXClipboard(inText);
+#endif
+#if LIN
+    std::string command = "echo -n " + inText + " | xclip -sel c";
+    if(0 != system(command.c_str())) {
+        LOG(ERROR) << "Copy command failed. Do you have xclip on your system?";
+        return false;
+    }
+    return true;
+#endif
 }
