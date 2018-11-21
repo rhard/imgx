@@ -111,6 +111,7 @@ private:
 
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
+    XPLMWindowPositioningMode mPreferredPositioningMode;
 
     static const char *getClipboardImGuiWrapper(void *user_data);
     static void setClipboardImGuiWrapper(void *user_data, const char *text);
@@ -187,6 +188,9 @@ protected:
 
     void SafeHide();
 
+    void SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex = -1);
+
+    void SetWindowGravity(float inLeftGravity, float inTopGravity, float inRightGravity, float inBottomGravity);
 public:
     virtual ~ImgWindow();
 
@@ -222,13 +226,13 @@ public:
      * not set VR layer here however unless the window is ONLY to be rendered
      * in VR.
      */
-    void init(
-            int left,
+    void init(int left,
             int top,
             int right,
             int bottom,
             XPLMWindowDecoration decoration = xplm_WindowDecorationRoundRectangle,
-            XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows);
+            XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows,
+            XPLMWindowPositioningMode preferredPositioningMode = xplm_WindowPositionFree);
 };
 
 #endif //IMGXWINDOW_H

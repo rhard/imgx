@@ -28,9 +28,11 @@ void ImgWindow::init(
         int right,
         int bottom,
         XPLMWindowDecoration decoration,
-        XPLMWindowLayer layer) {
+        XPLMWindowLayer layer,
+        XPLMWindowPositioningMode preferredPositioningMode) {
     mIsInVR = false;
     mPreferredLayer = layer;
+    mPreferredPositioningMode = preferredPositioningMode;
     mSelfDestruct = false;
     mSelfHide = false;
     mFirstRender = true;
@@ -124,6 +126,7 @@ void ImgWindow::init(
             handleRightClickFuncCB,
     };
     mWindowID = XPLMCreateWindowEx(&windowParams);
+    XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode, -1);
 }
 
 void
@@ -369,6 +372,7 @@ ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse, int bu
                     gDragging = 1;
                 }
                 io.MouseDown[button] = true;
+                break;
             }
             case xplm_MouseDrag:
                 if ((mDecoration != xplm_WindowDecorationRoundRectangle) && gDragging) {
@@ -378,6 +382,7 @@ ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse, int bu
                     mBottom = mTop - mHeight;
                     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
                 }
+                io.MouseDown[button] = true;
                 break;
             case xplm_MouseUp:
                 io.MouseDown[button] = false;
@@ -484,6 +489,16 @@ void ImgWindow::SetWindowResizingLimits(int inMinWidthBoxels, int inMinHeightBox
     XPLMSetWindowResizingLimits(mWindowID, inMinWidthBoxels, inMinHeightBoxels, inMaxWidthBoxels, inMaxHeightBoxels);
 }
 
+void ImgWindow::SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex)
+{
+    XPLMSetWindowPositioningMode(mWindowID, mode, inMonitorIndex);
+}
+
+void ImgWindow::SetWindowGravity(float inLeftGravity, float inTopGravity, float inRightGravity, float inBottomGravity)
+{
+    XPLMSetWindowGravity(mWindowID, inLeftGravity, inTopGravity, inRightGravity, inBottomGravity);
+}
+
 void
 ImgWindow::SetVisible(bool inIsVisible) {
     if (inIsVisible)
@@ -510,7 +525,7 @@ ImgWindow::MoveForVR() {
         mIsInVR = true;
     } else {
         if (mIsInVR) {
-            XPLMSetWindowPositioningMode(mWindowID, mPreferredLayer, -1);
+            XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode, -1);
             mIsInVR = false;
         }
     }
