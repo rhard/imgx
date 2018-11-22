@@ -92,6 +92,13 @@ protected:
     */
     bool mHasPrebuildFont;
 
+    int mTop;
+    int mBottom;
+    int mLeft;
+    int mRight;
+    int mWidth;
+    int mHeight;
+
 
     /** configureImguiContext() can be used to customise ImGui before the
      * font texture is bound.
@@ -108,13 +115,21 @@ protected:
      */
     void MoveForVR();
 
+
+
+
+    virtual void PreBuildInterface();
+
     /** buildInterface() is the method where you can define your ImGui interface
-     * and handle events.  It is called every frame the window is drawn.
-     *
-     * @note You must NOT delete the window object inside buildInterface() -
-     * use SafeDelete() for that.
-     */
-    virtual void buildInterface() = 0;
+ * and handle events.  It is called every frame the window is drawn.
+ *
+ * @note You must NOT delete the window object inside buildInterface() -
+ * use SafeDelete() for that.
+ */
+    virtual void BuildInterface() = 0;
+
+    virtual void PostBuildInterface();
+
 
     /** onShow() is called before making the Window visible.  It provides an
      * oportunity to prevent the window being shown.
@@ -202,12 +217,7 @@ private:
     ImGuiContext *mImGuiContext;
     bool mIsInVR;
 
-    int mTop;
-    int mBottom;
-    int mLeft;
-    int mRight;
-    int mWidth;
-    int mHeight;
+
 
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
@@ -220,8 +230,6 @@ private:
     static bool getTextFromClipboard(std::string &outText);
 
     static bool setTextToClipboard(const std::string &inText);
-
-
 };
 
 #endif //IMGWINDOW_H

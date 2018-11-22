@@ -301,15 +301,11 @@ ImgWindow::updateImGui() {
 
     ImGui::NewFrame();
 
-    ImGui::SetNextWindowPos(ImVec2((float) 0.0, (float) 0.0), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWidth), static_cast<float>(mHeight)), ImGuiCond_Always);
+    PreBuildInterface();
 
-    // and construct the window
-    ImGui::Begin(mWindowTitle.c_str(), nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                 ImGuiWindowFlags_NoMove);
-    buildInterface();
-    ImGui::End();
+    BuildInterface();
+
+    PostBuildInterface();
 
     // finally, handle window focus.
     int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
@@ -323,6 +319,21 @@ ImgWindow::updateImGui() {
         }
     }
     mFirstRender = false;
+}
+
+void ImgWindow::PostBuildInterface() {
+    ImGui::End();
+}
+
+void ImgWindow::PreBuildInterface() {
+    // set windows position and size
+    ImGui::SetNextWindowPos(ImVec2((float) 0.0, (float) 0.0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(static_cast<float>(mWidth), static_cast<float>(mHeight)), ImGuiCond_Always);
+
+    // and construct the window
+    ImGui::Begin(mWindowTitle.c_str(), nullptr,
+                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                 ImGuiWindowFlags_NoMove);
 }
 
 void

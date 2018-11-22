@@ -8,7 +8,7 @@ TestWindow::TestWindow(ImFontAtlas *fontAtlas) : ImgWindow(fontAtlas) {
     Init(100, 800, 800, 100, xplm_WindowDecorationRoundRectangle);
 }
 
-void TestWindow::buildInterface() {
+void TestWindow::BuildInterface() {
     auto &io = ImGui::GetIO();
     ImGui::Text("ImGui screen size: width = %f  height = %f", io.DisplaySize.x, io.DisplaySize.y);
     ImGui::Text("Want capture mouse: %i", io.WantCaptureMouse);

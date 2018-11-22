@@ -14,7 +14,7 @@ public:
     ~TestWindow() final = default;
 
 protected:
-    void buildInterface() override;
+    void BuildInterface() override;
 };
 
 
