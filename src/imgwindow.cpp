@@ -35,6 +35,7 @@ void ImgWindow::Init(
     mPreferredPositioningMode = mode;
     mSelfDestruct = false;
     mSelfHide = false;
+    mSelfResize = false;
     mFirstRender = true;
     mDecoration = decoration;
 
@@ -352,6 +353,15 @@ ImgWindow::drawWindowCB(XPLMWindowID /* inWindowID */inWindowID, void *inRefcon)
         thisWindow->mSelfHide = false;
     }
 
+    if (thisWindow->mSelfResize) {
+        XPLMSetWindowGeometry(thisWindow->mWindowID,
+                              thisWindow->mLeft,
+                              thisWindow->mTop,
+                              thisWindow->mRight + 50,
+                              thisWindow->mBottom - 50);
+        thisWindow->mSelfResize = false;
+    }
+
     if (thisWindow->mSelfDestruct) {
         delete thisWindow;
     }
@@ -376,17 +386,17 @@ ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse, int bu
 
     if (io.WantCaptureMouse) {
         switch (inMouse) {
-            case xplm_MouseDown: {
+            case xplm_MouseDown:
                 if ((mDecoration != xplm_WindowDecorationRoundRectangle) && !ImGui::IsAnyItemHovered()) {
                     dX = x - mLeft;
                     dY = y - mTop;
                     gDragging = 1;
                 }
                 io.MouseDown[button] = true;
-                break;
-            }
+                break;            
             case xplm_MouseDrag:
-                if ((mDecoration != xplm_WindowDecorationRoundRectangle) && gDragging) {
+                if ((mDecoration != xplm_WindowDecorationRoundRectangle) && gDragging &&
+                    (mLeft != (x - dX) || mTop != (y - dY))) {
                     mLeft = (x - dX);
                     mRight = mLeft + mWidth;
                     mTop = (y - dY);
@@ -560,6 +570,12 @@ ImgWindow::SafeDelete() {
 void ImgWindow::SafeHide()
 {
     mSelfHide = true;
+}
+
+void ImgWindow::SafeResize(ImVec2 size)
+{
+    mSelfResize = true;
+    mResize = size;
 }
 
 const char* ImgWindow::getClipboardImGuiWrapper(void* user_data)

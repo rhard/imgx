@@ -99,6 +99,9 @@ protected:
     int mWidth;
     int mHeight;
 
+    ImVec2 mResize;
+
+    std::string mWindowTitle;
 
     /** configureImguiContext() can be used to customise ImGui before the
      * font texture is bound.
@@ -109,6 +112,7 @@ protected:
                                  int inMinHeightBoxels,
                                  int inMaxWidthBoxels,
                                  int inMaxHeightBoxels);
+
 
     /** moveForVR() is an internal helper for moving the window to either it's
      * preferred layer or the VR layer depending on if the headset is in use.
@@ -148,6 +152,8 @@ protected:
     void SafeDelete();
 
     void SafeHide();
+
+    void SafeResize(ImVec2 size);
 
     void SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex = -1);
 
@@ -210,8 +216,7 @@ private:
     int mViewport[4];
     bool mSelfDestruct;
     bool mSelfHide;
-
-    std::string mWindowTitle;
+    bool mSelfResize;
 
     XPLMWindowID mWindowID;
     ImGuiContext *mImGuiContext;
