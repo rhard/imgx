@@ -5,7 +5,7 @@
 #include "testwindow.h"
 
 TestWindow::TestWindow(ImFontAtlas *fontAtlas) : ImgWindow(fontAtlas) {
-    init(100, 800, 800, 100, xplm_WindowDecorationRoundRectangle);
+    Init(100, 800, 800, 100, xplm_WindowDecorationRoundRectangle);
 }
 
 void TestWindow::buildInterface() {

@@ -4,11 +4,10 @@
  *   Modified by Roman Liubich
  */
 
-#ifndef IMGXWINDOW_H
-#define IMGXWINDOW_H
+#ifndef IMGWINDOW_H
+#define IMGWINDOW_H
 
 #include "XPLMDisplay.h"
-#include "XPLMProcessing.h"
 #include "imgui.h"
 
 #include <string>
@@ -37,8 +36,109 @@
  * trivially adapted from this one by adjusting the way the space is translated
  * and mapped in the DrawWindowCB and constructor.
  */
-class
-ImgWindow {
+class ImgWindow {
+public:
+    virtual ~ImgWindow();
+
+/// Makes the window visible after making the onShow() call.
+/// It is also at this time that the window will be relocated onto the VR
+/// display if the VR headset is in use.
+/// \param inIsVisible True to be displayed, false if the window is to be hidden.
+    virtual void SetVisible(bool inIsVisible);
+
+
+/// Returns the current window visibility.
+/// \return True if the window is visible, false otherwise
+    bool GetVisible() const;
+
+protected:
+/// Constructs a window with optional FontAtlas
+/// \param fontAtlas Shared ImFontAtlas
+    explicit ImgWindow(ImFontAtlas *fontAtlas = nullptr);
+
+/// Initialise a window with the specified parameters. Call this function
+/// in derived class constructor.
+/// \param left Left edge of the window's contents in global boxels.
+/// \param top Top edge of the window's contents in global boxels.
+/// \param right Right edge of the window's contents in global boxels.
+/// \param bottom Bottom edge of the window's contents in global boxels.
+/// \param decoration The decoration style to use
+/// \param layer The preferred layer to present this window in
+/// \param mode The preferred position mode to present this window
+    void Init(int left,
+              int top,
+              int right,
+              int bottom,
+              XPLMWindowDecoration decoration = xplm_WindowDecorationRoundRectangle,
+              XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows,
+              XPLMWindowPositioningMode mode = xplm_WindowPositionFree);
+
+/// Sets the title of the window both in the ImGui layer and the XPLM layer
+/// \param title The title to set
+    void SetWindowTitle(const std::string &title);
+
+    /** mFirstRender can be checked during buildInterface() to see if we're
+     * being rendered for the first time or not.  This is particularly
+     * important for windows that use Columns as SetColumnWidth() should only
+     * be called once.
+     *
+     * There may be other times where it's advantageous to make specific ImGui
+     * calls once and once only.
+     */
+    bool mFirstRender;
+
+    /** mHasPrebuildFont is active when IngWindow is created with shared FontAtlas.
+     * User should load the fonts and build the texture before creating the window.
+    */
+    bool mHasPrebuildFont;
+
+
+    /** configureImguiContext() can be used to customise ImGui before the
+     * font texture is bound.
+     */
+    virtual void ConfigureImguiContext();
+
+    void SetWindowResizingLimits(int inMinWidthBoxels,
+                                 int inMinHeightBoxels,
+                                 int inMaxWidthBoxels,
+                                 int inMaxHeightBoxels);
+
+    /** moveForVR() is an internal helper for moving the window to either it's
+     * preferred layer or the VR layer depending on if the headset is in use.
+     */
+    void MoveForVR();
+
+    /** buildInterface() is the method where you can define your ImGui interface
+     * and handle events.  It is called every frame the window is drawn.
+     *
+     * @note You must NOT delete the window object inside buildInterface() -
+     * use SafeDelete() for that.
+     */
+    virtual void buildInterface() = 0;
+
+    /** onShow() is called before making the Window visible.  It provides an
+     * oportunity to prevent the window being shown.
+     *
+     * @note the implementation in the base-class is a null handler.  You can
+     * safely override this without chaining.
+     *
+     * @return true if the Window should be shown, false if the attempt to show
+     * should be suppressed.
+     */
+    virtual bool OnShow();
+
+    /** SafeDelete() can be used within buildInterface() to get the object to
+     * self-delete once it's finished rendering this frame.
+     */
+    void SafeDelete();
+
+    void SafeHide();
+
+    void SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex = -1);
+
+    void SetWindowGravity(float inLeftGravity, float inTopGravity, float inRightGravity, float inBottomGravity);
+
+
 private:
     static void drawWindowCB(XPLMWindowID inWindowID, void *inRefcon);
 
@@ -114,125 +214,14 @@ private:
     XPLMWindowPositioningMode mPreferredPositioningMode;
 
     static const char *getClipboardImGuiWrapper(void *user_data);
+
     static void setClipboardImGuiWrapper(void *user_data, const char *text);
+
     static bool getTextFromClipboard(std::string &outText);
+
     static bool setTextToClipboard(const std::string &inText);
-protected:
-    /** mFirstRender can be checked during buildInterface() to see if we're
-     * being rendered for the first time or not.  This is particularly
-     * important for windows that use Columns as SetColumnWidth() should only
-     * be called once.
-     *
-     * There may be other times where it's advantageous to make specific ImGui
-     * calls once and once only.
-     */
-    bool mFirstRender;
-
-    /** mHasPrebuildFont is active when IngWindow is created with shared FontAtlas.
-     * User should load the fonts and build the texture before creating the window.
-    */
-    bool mHasPrebuildFont;
 
 
-    /** Construct a window with the specified bounds
-     *
-     * @param fontAtlas Shared font atlas.
-     */
-    explicit ImgWindow(ImFontAtlas *fontAtlas = nullptr);
-
-    /** configureImguiContext() can be used to customise ImGui before the
-     * font texture is bound.
-     */
-    virtual void ConfigureImguiContext();
-
-    /** SetWindowTitle sets the title of the window both in the ImGui layer and
-     * at the XPLM layer.
-     *
-     * @param title the title to set.
-     */
-    void SetWindowTitle(const std::string &title);
-
-    void SetWindowResizingLimits(int                  inMinWidthBoxels,
-                                 int                  inMinHeightBoxels,
-                                 int                  inMaxWidthBoxels,
-                                 int                  inMaxHeightBoxels);
-
-    /** moveForVR() is an internal helper for moving the window to either it's
-     * preferred layer or the VR layer depending on if the headset is in use.
-     */
-    void MoveForVR();
-
-    /** buildInterface() is the method where you can define your ImGui interface
-     * and handle events.  It is called every frame the window is drawn.
-     *
-     * @note You must NOT delete the window object inside buildInterface() -
-     * use SafeDelete() for that.
-     */
-    virtual void buildInterface() = 0;
-
-    /** onShow() is called before making the Window visible.  It provides an
-     * oportunity to prevent the window being shown.
-     *
-     * @note the implementation in the base-class is a null handler.  You can
-     * safely override this without chaining.
-     *
-     * @return true if the Window should be shown, false if the attempt to show
-     * should be suppressed.
-     */
-    virtual bool OnShow();
-
-    /** SafeDelete() can be used within buildInterface() to get the object to
-     * self-delete once it's finished rendering this frame.
-     */
-    void SafeDelete();
-
-    void SafeHide();
-
-    void SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex = -1);
-
-    void SetWindowGravity(float inLeftGravity, float inTopGravity, float inRightGravity, float inBottomGravity);
-public:
-    virtual ~ImgWindow();
-
-    /** SetVisible() makes the window visible after making the onShow() call.
-     * It is also at this time that the window will be relocated onto the VR
-     * display if the VR headset is in use.
-     *
-     * @param inIsVisible true to be displayed, false if the window is to be
-     * hidden.
-     */
-    virtual void SetVisible(bool inIsVisible);
-
-
-    /** GetVisible() returns the current window visibility.
-     * @return true if the window is visible, false otherwise.
-    */
-    bool GetVisible() const;
-
-    /** Initialise a window with the specified bounds
-     *
-     * @param left Left edge of the window's contents in global boxels.
-     * @param top Top edge of the window's contents in global boxels.
-     * @param right Right edge of the window's contents in global boxels.
-     * @param bottom Bottom edge of the window's contents in global boxels.
-     * @param decoration The decoration style to use (see notes)
-     * @param layer the preferred layer to present this window in (see notes)
-     *
-     * @note The decoration should generally be one presented/rendered by XP -
-     * the ImGui window decorations are very intentionally supressed by
-     * ImgWindow to allow them to fit in with the rest of the simulator.
-     *
-     * @note The only layers that really make sense are Floating and Modal.  Do
-     * not set VR layer here however unless the window is ONLY to be rendered
-     * in VR.
-     */
-    void init(int left,
-            int top,
-            int right,
-            int bottom,
-            XPLMWindowDecoration decoration = xplm_WindowDecorationRoundRectangle,
-            XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows,
-            XPLMWindowPositioningMode preferredPositioningMode = xplm_WindowPositionFree);
 };
 
-#endif //IMGXWINDOW_H
+#endif //IMGWINDOW_H

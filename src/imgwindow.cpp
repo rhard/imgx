@@ -22,17 +22,17 @@ ImgWindow::ImgWindow(ImFontAtlas *fontAtlas) {
     ImGui::SetCurrentContext(mImGuiContext);
 }
 
-void ImgWindow::init(
+void ImgWindow::Init(
         int left,
         int top,
         int right,
         int bottom,
         XPLMWindowDecoration decoration,
         XPLMWindowLayer layer,
-        XPLMWindowPositioningMode preferredPositioningMode) {
+        XPLMWindowPositioningMode mode) {
     mIsInVR = false;
     mPreferredLayer = layer;
-    mPreferredPositioningMode = preferredPositioningMode;
+    mPreferredPositioningMode = mode;
     mSelfDestruct = false;
     mSelfHide = false;
     mFirstRender = true;
