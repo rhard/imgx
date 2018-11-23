@@ -9,7 +9,7 @@
 #include "testwindow.h"
 
 TestWindow::TestWindow(ImFontAtlas *fontAtlas) : ImgWindow(fontAtlas) {
-    Init(100, 800, 800, 100, xplm_WindowDecorationRoundRectangle);
+    Init(600, 200, 600, 600);
 }
 
 void TestWindow::BuildInterface() {

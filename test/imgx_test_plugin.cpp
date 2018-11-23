@@ -15,8 +15,15 @@
 
 #include "testwindow.h"
 
-#include <gl/GL.h>
+#if LIN
+#include <GL/gl.h>
 #include <cstring>
+#elif IBM
+#include <gl/GL.h>
+#else
+#include <OpenGL/gl.h>
+#endif
+
 #include <memory>
 
 std::shared_ptr<TestWindow> window, window2;

@@ -38,7 +38,7 @@
 /// and mapped in the DrawWindowCB and constructor.
 class ImgWindow {
 public:
-    /// Anchor point which is used to place the window in X-Plane world
+    /// Anchor point used to place the window in X-Plane world
     enum Anchor {
         TopLeft,
         TopRight,
@@ -55,10 +55,21 @@ public:
     /// \param inIsVisible True to be displayed, false if the window is to be hidden.
     virtual void SetVisible(bool inIsVisible);
 
-
     /// Returns current window visibility.
     /// \return true if the window is visible, false otherwise
     bool GetVisible() const;
+
+    /// Resize the window relative to anchor point
+    /// \param width width of the window to resize
+    /// \param height height of the window to resize
+    /// \param anchor anchor point to resize
+    void Resize(int width, int height, Anchor anchor = TopLeft);
+
+    /// Place the window anchor point
+    /// \param x x coordinate to place the window
+    /// \param y y coordinate to place the window
+    /// \param anchor anchor point to place the window
+    void Place(int x, int y, Anchor anchor = TopLeft);
 
 protected:
     /// Constructs a window with optional FontAtlas
@@ -67,10 +78,11 @@ protected:
 
     /// Initialise a window with the specified parameters. Call this function
     /// in derived class constructor.
-    /// \param left left edge of the window's contents in global boxels.
-    /// \param top top edge of the window's contents in global boxels.
-    /// \param right right edge of the window's contents in global boxels.
-    /// \param bottom bottom edge of the window's contents in global boxels.
+    /// \param width width of the window
+    /// \param height height of the window
+    /// \param x x coordinate to place the window anchor point
+    /// \param y y coordinate to place the window anchor point
+    /// \param anchor anchor point to place the window (default to TopLeft)
     /// \param decoration decoration style to use
     /// \param layer preferred layer to present this window in
     /// \param mode preferred position mode to present this window
@@ -119,9 +131,10 @@ protected:
 
     /// Can be used within buildInterface() to resize the window once it's
     /// finished rendering this frame.
-    /// \param size size of the window as ImVec2
-    /// \param anchor relative point to resize
-    void SafeResize(ImVec2 size, Anchor anchor = TopLeft);
+    /// \param width width of the window to resize
+    /// \param height height of the window to resize
+    /// \param anchor anchor point to resize
+    void SafeResize(int width, int height, Anchor anchor = TopLeft);
 
     /// Set window resizing limits
     /// \param inMinWidthBoxels min windows width in boxels
@@ -158,11 +171,6 @@ protected:
     /// \param inBottomGravity bottom gravity (0.0 - 1.0)
     void SetGravity(float inLeftGravity, float inTopGravity,
                     float inRightGravity, float inBottomGravity);
-
-    void Resize(int width, int height, Anchor anchor = TopLeft);
-
-    void Place(int x, int y, Anchor anchor = TopLeft);
-
 
     /// Is active when IngWindow is created with shared FontAtlas. User
     /// should load the fonts and build the texture before creating the
@@ -228,8 +236,6 @@ private:
 
     void updateImGui();
 
-    //void updateMatrices();
-
     void boxelsToNative(int x, int y, int &outX, int &outY);
 
     void translateImGuiToBoxel(float inX, float inY, int &outX, int &outY);
@@ -242,10 +248,11 @@ private:
     XPLMWindowID mWindowID;
     bool mIsInVR;
 
-    /// Variable to hold the size of the window which must be set after calling
+    /// Variables to hold the size of the window which must be set after calling
     /// SafeResize()
-    ImVec2 mResize;
+    int mResizeWidth, mResizeHeight;
 
+    /// Variable to hold resize anchor
     Anchor mResizeAnchor;
 
     XPLMWindowLayer mPreferredLayer;

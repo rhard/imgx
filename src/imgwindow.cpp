@@ -7,19 +7,34 @@
 
 #include "imgwindow.h"
 
+#if LIN
+#include <GL/gl.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#elif IBM
 #include <gl/GL.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 
 /// \file
 /// This file contains the definition of the ImgWindow class, which is the
 /// base class for all ImGui driven X-Plane windows
 
+// Dataref's for OpenGL scene data
 static XPLMDataRef gVrEnabledRef = nullptr;
 static XPLMDataRef gModelViewMatrixRef = nullptr;
 static XPLMDataRef gViewportRef = nullptr;
 static XPLMDataRef gProjectionMatrixRef = nullptr;
 
+// OpenGL scene data
 static float mModelView[16], mProjection[16];
 static int mViewport[4];
+
+#if APL
+bool GetOSXClipboard(std::string& outText);
+bool SetOSXClipboard(const std::string& inText);
+#endif
 
 static bool getTextFromClipboard(std::string &outText) {
 #if IBM
@@ -28,7 +43,7 @@ static bool getTextFromClipboard(std::string &outText) {
     bool retVal = false;
     static XPLMDataRef hwndDataRef = XPLMFindDataRef(
             "sim/operation/windows/system_window");
-    HWND hwndMain = (HWND) XPLMGetDatai(hwndDataRef);
+    HWND hwndMain = (HWND) (uintptr_t) XPLMGetDatai(hwndDataRef);
 
     if (!IsClipboardFormatAvailable(CF_TEXT))
         return false;
@@ -121,7 +136,7 @@ static bool setTextToClipboard(const std::string &inText) {
     HGLOBAL hglbCopy;
     static XPLMDataRef hwndDataRef = XPLMFindDataRef(
             "sim/operation/windows/system_window");
-    HWND hwndMain = (HWND) XPLMGetDatai(hwndDataRef);
+    HWND hwndMain = (HWND) (uintptr_t) XPLMGetDatai(hwndDataRef);
 
     if (!OpenClipboard(hwndMain))
         return false;
@@ -148,7 +163,6 @@ static bool setTextToClipboard(const std::string &inText) {
 #if LIN
     std::string command = "echo -n " + inText + " | xclip -sel c";
     if(0 != system(command.c_str())) {
-        LOG(ERROR) << "Copy command failed. Do you have xclip on your system?";
         return false;
     }
     return true;
@@ -257,8 +271,8 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     if (!mHasPrebuildFont) {
         // bind default font
         unsigned char *pixels;
-        int width, height;
-        io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
+        int fWidth, fHeight;
+        io.Fonts->GetTexDataAsAlpha8(&pixels, &fWidth, &fHeight);
 
         // slightly stupid dance around the texture number due to XPLM not using GLint here.
         int texNum = 0;
@@ -269,7 +283,7 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, fWidth, fHeight, 0, GL_ALPHA,
                      GL_UNSIGNED_BYTE, pixels);
         io.Fonts->TexID = (void *) (uintptr_t) texNum;
     }
@@ -280,38 +294,38 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     mHeight = height;
 
     switch (anchor) {
-    case TopLeft:
-        mLeft = x;
-        mRight = mLeft + width;
-        mTop = y;
-        mBottom = mTop - height;
-        break;
-    case TopRight:
-        mRight = x;
-        mLeft = mRight - width;
-        mTop = y;
-        mBottom = mTop - height;
-        break;
-    case BottomLeft:
-        mLeft = x;
-        mRight = mLeft + width;
-        mBottom = y;
-        mTop = mBottom + height;
-        break;
-    case BottomRight:
-        mRight = x;
-        mLeft = mRight - width;
-        mBottom = y;
-        mTop = mBottom + height;
-        break;
-    case Center:
-        mLeft = x - width/2;
-        mRight = mLeft + width;
-        mTop = y + height/2;
-        mBottom = mTop - height;
-        break;
-    default:
-        break;
+        case TopLeft:
+            mLeft = x;
+            mRight = mLeft + width;
+            mTop = y;
+            mBottom = mTop - height;
+            break;
+        case TopRight:
+            mRight = x;
+            mLeft = mRight - width;
+            mTop = y;
+            mBottom = mTop - height;
+            break;
+        case BottomLeft:
+            mLeft = x;
+            mRight = mLeft + width;
+            mBottom = y;
+            mTop = mBottom + height;
+            break;
+        case BottomRight:
+            mRight = x;
+            mLeft = mRight - width;
+            mBottom = y;
+            mTop = mBottom + height;
+            break;
+        case Center:
+            mLeft = x - width / 2;
+            mRight = mLeft + width;
+            mTop = y + height / 2;
+            mBottom = mTop - height;
+            break;
+        default:
+            break;
     }
 
     XPLMCreateWindow_t windowParams = {
@@ -559,7 +573,7 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     }
 
     if (thisWindow->mSelfResize) {
-        thisWindow->Resize(thisWindow->mResize.x, thisWindow->mResize.y,
+        thisWindow->Resize(thisWindow->mResizeWidth, thisWindow->mResizeHeight,
                            thisWindow->mResizeAnchor);
         thisWindow->mSelfResize = false;
     }
@@ -692,16 +706,15 @@ int ImgWindow::handleRightClickFuncCB(XPLMWindowID inWindowID, int x, int y,
     return thisWindow->handleMouseClickGeneric(x, y, inMouse, 1);
 }
 
-
 void ImgWindow::SetWindowTitle(const std::string &title) {
     mWindowTitle = title;
     XPLMSetWindowTitle(mWindowID, mWindowTitle.c_str());
 }
 
 void ImgWindow::SetResizingLimits(int inMinWidthBoxels,
-                                        int inMinHeightBoxels,
-                                        int inMaxWidthBoxels,
-                                        int inMaxHeightBoxels) {
+                                  int inMinHeightBoxels,
+                                  int inMaxWidthBoxels,
+                                  int inMaxHeightBoxels) {
     XPLMSetWindowResizingLimits(mWindowID, inMinWidthBoxels, inMinHeightBoxels,
                                 inMaxWidthBoxels, inMaxHeightBoxels);
 }
@@ -717,72 +730,70 @@ void ImgWindow::SetGravity(float inLeftGravity, float inTopGravity,
                          inBottomGravity);
 }
 
-void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor)
-{
+void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor) {
     switch (anchor) {
-    case TopLeft:
-        mRight = mLeft + width;
-        mBottom = mTop - height;
-        break;
-    case TopRight:
-        mLeft = mRight - width;
-        mBottom = mTop - height;
-        break;
-    case BottomLeft:
-        mRight = mLeft + width;
-        mTop = mBottom + height;
-        break;
-    case BottomRight:
-        mLeft = mRight - width;
-        mTop = mBottom + height;
-        break;
-    case Center:
-        mLeft = (2*mLeft + mWidth - width)/2;
-        mRight = mLeft + width;
-        mBottom = (2*mBottom + mHeight - height)/2;
-        mTop = mBottom + height;
-        break;
-    default:
-        break;
+        case TopLeft:
+            mRight = mLeft + width;
+            mBottom = mTop - height;
+            break;
+        case TopRight:
+            mLeft = mRight - width;
+            mBottom = mTop - height;
+            break;
+        case BottomLeft:
+            mRight = mLeft + width;
+            mTop = mBottom + height;
+            break;
+        case BottomRight:
+            mLeft = mRight - width;
+            mTop = mBottom + height;
+            break;
+        case Center:
+            mLeft = (2 * mLeft + mWidth - width) / 2;
+            mRight = mLeft + width;
+            mBottom = (2 * mBottom + mHeight - height) / 2;
+            mTop = mBottom + height;
+            break;
+        default:
+            break;
     }
     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
 
-void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor)
-{
+void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor) {
     switch (anchor) {
-    case TopLeft:
-        mLeft = x;
-        mRight = mLeft + mWidth;
-        mTop = y;
-        mBottom = mTop - mHeight;
-        break;
-    case TopRight:
-        mRight = x;
-        mLeft = mRight - mWidth;
-        mTop = y;
-        mBottom = mTop - mHeight;
-        break;
-    case BottomLeft:
-        mLeft = x;
-        mRight = mLeft + mWidth;
-        mBottom = y;
-        mTop = mBottom + mHeight;
-        break;
-    case BottomRight:
-        mRight = x;
-        mLeft = mRight - mWidth;
-        mBottom = y;
-        mTop = mBottom + mHeight;
-        break;
-    case Center:
-        mLeft = x - mWidth/2;
-        mRight = mLeft + mWidth;
-        mTop = y + mHeight/2;
-        mBottom = mTop - mHeight;
-        break;
-    default:
-        break;
+        case TopLeft:
+            mLeft = x;
+            mRight = mLeft + mWidth;
+            mTop = y;
+            mBottom = mTop - mHeight;
+            break;
+        case TopRight:
+            mRight = x;
+            mLeft = mRight - mWidth;
+            mTop = y;
+            mBottom = mTop - mHeight;
+            break;
+        case BottomLeft:
+            mLeft = x;
+            mRight = mLeft + mWidth;
+            mBottom = y;
+            mTop = mBottom + mHeight;
+            break;
+        case BottomRight:
+            mRight = x;
+            mLeft = mRight - mWidth;
+            mBottom = y;
+            mTop = mBottom + mHeight;
+            break;
+        case Center:
+            mLeft = x - mWidth / 2;
+            mRight = mLeft + mWidth;
+            mTop = y + mHeight / 2;
+            mBottom = mTop - mHeight;
+            break;
+        default:
+            break;
     }
     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
@@ -834,8 +845,9 @@ void ImgWindow::SafeHide() {
     mSelfHide = true;
 }
 
-void ImgWindow::SafeResize(ImVec2 size, Anchor anchor) {
+void ImgWindow::SafeResize(int width, int height, Anchor anchor) {
     mSelfResize = true;
-    mResize = size;
+    mResizeWidth = width;
+    mResizeHeight = height;
     mResizeAnchor = anchor;
 }
