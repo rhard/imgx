@@ -1,8 +1,6 @@
-/*
- *   Another ImGui port for X-Plane
- *   Created by Christopher Collins
- *   Modified by Roman Liubich
- */
+/// Another ImGui port for X-Plane
+/// created by Christopher Collins
+/// Modified by Roman Liubich
 
 #ifndef IMGWINDOW_H
 #define IMGWINDOW_H
@@ -12,59 +10,61 @@
 
 #include <string>
 
-/** ImgWindow is a Window for creating dear imgui widgets within.
- *
- * There's a few traps to be aware of when using dear imgui with X-Plane:
- *
- * 1) The Dear ImGUI coordinate scheme is inverted in the Y axis vs the X-Plane
- *    (and OpenGL default) scheme. You must be careful if you're trying to
- *    directly manipulate positioning of widgets rather than letting imgui
- *    self-layout.  There are (private) functions in ImgWindow to do the
- *    coordinate mapping.
- *
- * 2) The Dear ImGUI rendering space is only as big as the window - this means
- *    popup elements cannot be larger than the parent window.  This was
- *    unavoidable on XP11 because of how popup windows work and the possibility
- *    for negative coordinates (which imgui doesn't like).
- *
- * 3) There is no way to detect if the window is hidden without a per-frame
- *    processing loop or similar.
- *
- * @note It should be possible to map globally on XP9 & XP10 letting you run
- * popups as large as you need, or to use the ImGUI native titlebars instead of
- * the XP10 ones - source for this may be provided later, but could also be
- * trivially adapted from this one by adjusting the way the space is translated
- * and mapped in the DrawWindowCB and constructor.
- */
+/// \file
+/// This file contains the declaration of the ImgWindow class, which is the
+/// base class for all ImGui driven X-Plane windows.
+/// \brief ImgWindow is a Window for creating dear ImGui widgets within.
+///
+/// There's a few traps to be aware of when using dear ImGui with X-Plane:
+///
+/// 1. The Dear ImGui coordinate scheme is inverted in the Y axis vs the
+/// X-Plane (and OpenGL default) scheme. You must be careful if you're trying
+/// to directly manipulate positioning of widgets rather than letting ImGui
+/// self-layout. There are (private) functions in ImgWindow to do the
+/// coordinate mapping.
+///
+/// 2. The Dear ImGui rendering space is only as big as the window - this means
+/// popup elements cannot be larger than the parent window. This was unavoidable
+/// on XP11 because of how popup windows work and the possibility for
+/// negative  coordinates (which ImGui doesn't like).
+///
+/// 3. There is no way to detect if the window is hidden without a per-frame
+/// processing loop or similar.
+///
+/// \note It should be possible to map globally on XP9 & XP10 letting you run
+/// popups as large as you need, or to use the ImGui native titlebars instead of
+/// the XP10 ones - source for this may be provided later, but could also be
+/// trivially adapted from this one by adjusting the way the space is translated
+/// and mapped in the DrawWindowCB and constructor.
 class ImgWindow {
 public:
     virtual ~ImgWindow();
 
-/// Makes the window visible after making the onShow() call.
-/// It is also at this time that the window will be relocated onto the VR
-/// display if the VR headset is in use.
-/// \param inIsVisible True to be displayed, false if the window is to be hidden.
+    /// Makes the window visible after making the onShow() call.
+    /// It is also at this time that the window will be relocated onto the VR
+    /// display if the VR headset is in use.
+    /// \param inIsVisible True to be displayed, false if the window is to be hidden.
     virtual void SetVisible(bool inIsVisible);
 
 
-/// Returns the current window visibility.
-/// \return True if the window is visible, false otherwise
+    /// Returns current window visibility.
+    /// \return true if the window is visible, false otherwise
     bool GetVisible() const;
 
 protected:
-/// Constructs a window with optional FontAtlas
-/// \param fontAtlas Shared ImFontAtlas
+    /// Constructs a window with optional FontAtlas
+    /// \param fontAtlas shared ImFontAtlas
     explicit ImgWindow(ImFontAtlas *fontAtlas = nullptr);
 
-/// Initialise a window with the specified parameters. Call this function
-/// in derived class constructor.
-/// \param left Left edge of the window's contents in global boxels.
-/// \param top Top edge of the window's contents in global boxels.
-/// \param right Right edge of the window's contents in global boxels.
-/// \param bottom Bottom edge of the window's contents in global boxels.
-/// \param decoration The decoration style to use
-/// \param layer The preferred layer to present this window in
-/// \param mode The preferred position mode to present this window
+    /// Initialise a window with the specified parameters. Call this function
+    /// in derived class constructor.
+    /// \param left left edge of the window's contents in global boxels.
+    /// \param top top edge of the window's contents in global boxels.
+    /// \param right right edge of the window's contents in global boxels.
+    /// \param bottom bottom edge of the window's contents in global boxels.
+    /// \param decoration decoration style to use
+    /// \param layer preferred layer to present this window in
+    /// \param mode preferred position mode to present this window
     void Init(int left,
               int top,
               int right,
@@ -73,95 +73,107 @@ protected:
               XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows,
               XPLMWindowPositioningMode mode = xplm_WindowPositionFree);
 
-/// Sets the title of the window both in the ImGui layer and the XPLM layer
-/// \param title The title to set
+    /// can be used to customise ImGui context for user needs
+    virtual void ConfigureImGuiContext();
+
+    /// Override this method if you want to define your own ImGui window
+    /// creation. It might be used to setup ImGui window flags, adjust window
+    /// background color, push style variables etc. It is called every frame
+    /// the window is drawn.
+    /// \note It must contain ImGui::Begin() command.
+    /// \code
+    ///     TODO: write an example here
+    /// \endcode
+    virtual void PreBuildInterface();
+
+    /// Main method for GUI definition and event handling. It is called every
+    /// frame the window is drawn.
+    /// \note You must NOT delete, hide, resize the window object inside
+    /// buildInterface(). Use SafeDelete(), SafeHide(), SafeResize() for that.
+    virtual void BuildInterface() = 0;
+
+    /// Override this if you want to define your own window finalize method.
+    /// It might be used to pop pushed style flags etc. It is called every
+    /// frame the window is drawn.
+    /// \note It must contain ImGui::End() command.
+    virtual void PostBuildInterface();
+
+    /// Sets the title of the window both in the ImGui layer and in the XPLM
+    /// layer
+    /// \param title title to set
     void SetWindowTitle(const std::string &title);
 
-    /** mFirstRender can be checked during buildInterface() to see if we're
-     * being rendered for the first time or not.  This is particularly
-     * important for windows that use Columns as SetColumnWidth() should only
-     * be called once.
-     *
-     * There may be other times where it's advantageous to make specific ImGui
-     * calls once and once only.
-     */
-    bool mFirstRender;
+    /// Can be used within buildInterface() to get the object to self-delete
+    /// once it's finished rendering this frame.
+    void SafeDelete();
 
-    /** mHasPrebuildFont is active when IngWindow is created with shared FontAtlas.
-     * User should load the fonts and build the texture before creating the window.
-    */
-    bool mHasPrebuildFont;
+    /// Can be used within buildInterface() to hide the window once it's
+    /// finished rendering this frame.
+    void SafeHide();
 
-    int mTop;
-    int mBottom;
-    int mLeft;
-    int mRight;
-    int mWidth;
-    int mHeight;
+    /// Can be used within buildInterface() to resize the window once it's
+    /// finished rendering this frame.
+    /// \param size size of the window as ImVec2
+    void SafeResize(ImVec2 size);
 
-    ImVec2 mResize;
-
-    std::string mWindowTitle;
-
-    /** configureImguiContext() can be used to customise ImGui before the
-     * font texture is bound.
-     */
-    virtual void ConfigureImguiContext();
-
+    /// Set window resizing limits
+    /// \param inMinWidthBoxels min windows width in boxels
+    /// \param inMinHeightBoxels min windows height in boxels
+    /// \param inMaxWidthBoxels max windows width in boxels
+    /// \param inMaxHeightBoxels max windows height in boxels
     void SetWindowResizingLimits(int inMinWidthBoxels,
                                  int inMinHeightBoxels,
                                  int inMaxWidthBoxels,
                                  int inMaxHeightBoxels);
 
-
-    /** moveForVR() is an internal helper for moving the window to either it's
-     * preferred layer or the VR layer depending on if the headset is in use.
-     */
+    /// An internal helper for moving the window to either it's preferred
+    /// layer or the VR layer depending on if the headset is in use.
     void MoveForVR();
 
-
-
-
-    virtual void PreBuildInterface();
-
-    /** buildInterface() is the method where you can define your ImGui interface
- * and handle events.  It is called every frame the window is drawn.
- *
- * @note You must NOT delete the window object inside buildInterface() -
- * use SafeDelete() for that.
- */
-    virtual void BuildInterface() = 0;
-
-    virtual void PostBuildInterface();
-
-
-    /** onShow() is called before making the Window visible.  It provides an
-     * oportunity to prevent the window being shown.
-     *
-     * @note the implementation in the base-class is a null handler.  You can
-     * safely override this without chaining.
-     *
-     * @return true if the Window should be shown, false if the attempt to show
-     * should be suppressed.
-     */
+    /// Called before making the window visible. It provides an opportunity
+    /// to prevent the window being shown.
+    /// \note the implementation in the base-class is a null handler. You can
+    /// safely override this without chaining.
+    /// \return true if the window should be shown, false if the attempt to show
+    /// should be suppressed.
     virtual bool OnShow();
 
-    /** SafeDelete() can be used within buildInterface() to get the object to
-     * self-delete once it's finished rendering this frame.
-     */
-    void SafeDelete();
+    /// Sets X-Plane window window positioning mode for the specified monitor
+    /// \param mode XPLMWindowPositioningMode
+    /// \param inMonitorIndex monitor for which mode is set (default to main)
+    void SetPositioningMode(XPLMWindowPositioningMode mode,
+                            int inMonitorIndex = -1);
 
-    void SafeHide();
+    /// Sets X-Plane window gravity
+    /// \param inLeftGravity left gravity (0.0 - 1.0)
+    /// \param inTopGravity top gravity (0.0 - 1.0)
+    /// \param inRightGravity right gravity (0.0 - 1.0)
+    /// \param inBottomGravity bottom gravity (0.0 - 1.0)
+    void SetGravity(float inLeftGravity, float inTopGravity,
+                    float inRightGravity, float inBottomGravity);
 
-    void SafeResize(ImVec2 size);
+    /// Is active when IngWindow is created with shared FontAtlas. User
+    /// should load the fonts and build the texture before creating the
+    /// window. Otherwise ImgWindow will build default font.
+    bool mHasPrebuildFont;
 
-    void SetWindowPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex = -1);
+    /// Can be checked during buildInterface() to see if we're being rendered
+    /// for the first time or not. This is particularly important for windows
+    /// that use columns as SetColumnWidth() should only be called once.
+    /// There may be other times where it's advantageous to make specific ImGui
+    /// calls once and once only
+    bool mFirstRender;
 
-    void SetWindowGravity(float inLeftGravity, float inTopGravity, float inRightGravity, float inBottomGravity);
+    /// Window current coordinates and size in X-Plane space
+    // TODO: maybe move to private
+    int mTop, mBottom, mLeft, mRight, mWidth, mHeight;
 
+    /// Window title
+    std::string mWindowTitle;
 
 private:
-    static void drawWindowCB(XPLMWindowID inWindowID, void *inRefcon);
+    static void drawWindowCB(XPLMWindowID inWindowID,
+                             void *inRefcon);
 
     static int handleMouseClickCB(
             XPLMWindowID inWindowID,
@@ -204,37 +216,27 @@ private:
 
     void updateImGui();
 
-    void updateMatrices();
+    //void updateMatrices();
 
     void boxelsToNative(int x, int y, int &outX, int &outY);
 
-    void translateImguiToBoxel(float inX, float inY, int &outX, int &outY);
+    void translateImGuiToBoxel(float inX, float inY, int &outX, int &outY);
 
-    void translateToImguiSpace(int inX, int inY, float &outX, float &outY);
+    void translateToImGuiSpace(int inX, int inY, float &outX, float &outY);
 
-    float mModelView[16], mProjection[16];
-    int mViewport[4];
-    bool mSelfDestruct;
-    bool mSelfHide;
-    bool mSelfResize;
+    bool mSelfDestruct, mSelfHide, mSelfResize;
 
-    XPLMWindowID mWindowID;
     ImGuiContext *mImGuiContext;
+    XPLMWindowID mWindowID;
     bool mIsInVR;
 
-
+    /// Variable to hold the size of the window which must be set after calling
+    /// SafeResize()
+    ImVec2 mResize;
 
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
     XPLMWindowPositioningMode mPreferredPositioningMode;
-
-    static const char *getClipboardImGuiWrapper(void *user_data);
-
-    static void setClipboardImGuiWrapper(void *user_data, const char *text);
-
-    static bool getTextFromClipboard(std::string &outText);
-
-    static bool setTextToClipboard(const std::string &inText);
 };
 
 #endif //IMGWINDOW_H

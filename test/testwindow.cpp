@@ -1,6 +1,10 @@
-//
-// Created by z002fctv on 14.11.2018.
-//
+/*
+ *   Imgx test plugin for X-Plane
+ *   Created by Roman Liubich
+ *   Inspired by  William Good and Christopher Collins
+ *
+ *   This is also an example how to use imgx in the final project
+ */
 
 #include "testwindow.h"
 
