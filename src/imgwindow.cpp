@@ -190,7 +190,7 @@ ImgWindow::ImgWindow(ImFontAtlas *fontAtlas) {
     ImGui::SetCurrentContext(mImGuiContext);
 }
 
-void ImgWindow::Init(int left, int top, int right, int bottom,
+void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
                      XPLMWindowDecoration decoration,
                      XPLMWindowLayer layer,
                      XPLMWindowPositioningMode mode) {
@@ -276,12 +276,50 @@ void ImgWindow::Init(int left, int top, int right, int bottom,
     // disable OSX-like keyboard behaviours always - we don't have the keymapping for it.
     io.ConfigMacOSXBehaviors = false; // io.OptMacOSXBehaviors = false;
 
+    mWidth = width;
+    mHeight = height;
+
+    switch (anchor) {
+    case TopLeft:
+        mLeft = x;
+        mRight = mLeft + width;
+        mTop = y;
+        mBottom = mTop - height;
+        break;
+    case TopRight:
+        mRight = x;
+        mLeft = mRight - width;
+        mTop = y;
+        mBottom = mTop - height;
+        break;
+    case BottomLeft:
+        mLeft = x;
+        mRight = mLeft + width;
+        mBottom = y;
+        mTop = mBottom + height;
+        break;
+    case BottomRight:
+        mRight = x;
+        mLeft = mRight - width;
+        mBottom = y;
+        mTop = mBottom + height;
+        break;
+    case Center:
+        mLeft = x - width/2;
+        mRight = mLeft + width;
+        mTop = y + height/2;
+        mBottom = mTop - height;
+        break;
+    default:
+        break;
+    }
+
     XPLMCreateWindow_t windowParams = {
             sizeof(windowParams),
-            left,
-            top,
-            right,
-            bottom,
+            mLeft,
+            mTop,
+            mRight,
+            mBottom,
             0,
             drawWindowCB,
             handleMouseClickCB,
@@ -521,11 +559,8 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     }
 
     if (thisWindow->mSelfResize) {
-        XPLMSetWindowGeometry(thisWindow->mWindowID,
-                              thisWindow->mLeft,
-                              thisWindow->mTop,
-                              thisWindow->mRight + 50,
-                              thisWindow->mBottom - 50);
+        thisWindow->Resize(thisWindow->mResize.x, thisWindow->mResize.y,
+                           thisWindow->mResizeAnchor);
         thisWindow->mSelfResize = false;
     }
 
@@ -550,6 +585,8 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
     /// Get the windows current position once again
     // TODO: do we really need this?
     XPLMGetWindowGeometry(mWindowID, &mLeft, &mTop, &mRight, &mBottom);
+    mWidth = mRight - mLeft;
+    mHeight = mTop - mBottom;
 
     if (io.WantCaptureMouse) {
         switch (inMouse) {
@@ -566,7 +603,8 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
                 // Drag only if we use window without X-Plane decorations
                 // and only if the mouse coordinates really changed!
                 // Otherwise the window could not be resized
-                if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
+                // FIXME: fix resizing for different anchor points
+                if (mDecoration != xplm_WindowDecorationRoundRectangle &&
                     gDragging && (mLeft != (x - dX) || mTop != (y - dY))) {
                     mLeft = (x - dX);
                     mRight = mLeft + mWidth;
@@ -660,7 +698,7 @@ void ImgWindow::SetWindowTitle(const std::string &title) {
     XPLMSetWindowTitle(mWindowID, mWindowTitle.c_str());
 }
 
-void ImgWindow::SetWindowResizingLimits(int inMinWidthBoxels,
+void ImgWindow::SetResizingLimits(int inMinWidthBoxels,
                                         int inMinHeightBoxels,
                                         int inMaxWidthBoxels,
                                         int inMaxHeightBoxels) {
@@ -677,6 +715,76 @@ void ImgWindow::SetGravity(float inLeftGravity, float inTopGravity,
                            float inRightGravity, float inBottomGravity) {
     XPLMSetWindowGravity(mWindowID, inLeftGravity, inTopGravity, inRightGravity,
                          inBottomGravity);
+}
+
+void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor)
+{
+    switch (anchor) {
+    case TopLeft:
+        mRight = mLeft + width;
+        mBottom = mTop - height;
+        break;
+    case TopRight:
+        mLeft = mRight - width;
+        mBottom = mTop - height;
+        break;
+    case BottomLeft:
+        mRight = mLeft + width;
+        mTop = mBottom + height;
+        break;
+    case BottomRight:
+        mLeft = mRight - width;
+        mTop = mBottom + height;
+        break;
+    case Center:
+        mLeft = (2*mLeft + mWidth - width)/2;
+        mRight = mLeft + width;
+        mBottom = (2*mBottom + mHeight - height)/2;
+        mTop = mBottom + height;
+        break;
+    default:
+        break;
+    }
+    XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+}
+
+void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor)
+{
+    switch (anchor) {
+    case TopLeft:
+        mLeft = x;
+        mRight = mLeft + mWidth;
+        mTop = y;
+        mBottom = mTop - mHeight;
+        break;
+    case TopRight:
+        mRight = x;
+        mLeft = mRight - mWidth;
+        mTop = y;
+        mBottom = mTop - mHeight;
+        break;
+    case BottomLeft:
+        mLeft = x;
+        mRight = mLeft + mWidth;
+        mBottom = y;
+        mTop = mBottom + mHeight;
+        break;
+    case BottomRight:
+        mRight = x;
+        mLeft = mRight - mWidth;
+        mBottom = y;
+        mTop = mBottom + mHeight;
+        break;
+    case Center:
+        mLeft = x - mWidth/2;
+        mRight = mLeft + mWidth;
+        mTop = y + mHeight/2;
+        mBottom = mTop - mHeight;
+        break;
+    default:
+        break;
+    }
+    XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
 
 void ImgWindow::SetVisible(bool inIsVisible) {
@@ -726,7 +834,8 @@ void ImgWindow::SafeHide() {
     mSelfHide = true;
 }
 
-void ImgWindow::SafeResize(ImVec2 size) {
+void ImgWindow::SafeResize(ImVec2 size, Anchor anchor) {
     mSelfResize = true;
     mResize = size;
+    mResizeAnchor = anchor;
 }

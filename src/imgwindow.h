@@ -38,6 +38,15 @@
 /// and mapped in the DrawWindowCB and constructor.
 class ImgWindow {
 public:
+    /// Anchor point which is used to place the window in X-Plane world
+    enum Anchor {
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight,
+        Center
+    };
+
     virtual ~ImgWindow();
 
     /// Makes the window visible after making the onShow() call.
@@ -65,10 +74,7 @@ protected:
     /// \param decoration decoration style to use
     /// \param layer preferred layer to present this window in
     /// \param mode preferred position mode to present this window
-    void Init(int left,
-              int top,
-              int right,
-              int bottom,
+    void Init(int width, int height, int x, int y, Anchor anchor = TopLeft,
               XPLMWindowDecoration decoration = xplm_WindowDecorationRoundRectangle,
               XPLMWindowLayer layer = xplm_WindowLayerFloatingWindows,
               XPLMWindowPositioningMode mode = xplm_WindowPositionFree);
@@ -114,14 +120,15 @@ protected:
     /// Can be used within buildInterface() to resize the window once it's
     /// finished rendering this frame.
     /// \param size size of the window as ImVec2
-    void SafeResize(ImVec2 size);
+    /// \param anchor relative point to resize
+    void SafeResize(ImVec2 size, Anchor anchor = TopLeft);
 
     /// Set window resizing limits
     /// \param inMinWidthBoxels min windows width in boxels
     /// \param inMinHeightBoxels min windows height in boxels
     /// \param inMaxWidthBoxels max windows width in boxels
     /// \param inMaxHeightBoxels max windows height in boxels
-    void SetWindowResizingLimits(int inMinWidthBoxels,
+    void SetResizingLimits(int inMinWidthBoxels,
                                  int inMinHeightBoxels,
                                  int inMaxWidthBoxels,
                                  int inMaxHeightBoxels);
@@ -151,6 +158,11 @@ protected:
     /// \param inBottomGravity bottom gravity (0.0 - 1.0)
     void SetGravity(float inLeftGravity, float inTopGravity,
                     float inRightGravity, float inBottomGravity);
+
+    void Resize(int width, int height, Anchor anchor = TopLeft);
+
+    void Place(int x, int y, Anchor anchor = TopLeft);
+
 
     /// Is active when IngWindow is created with shared FontAtlas. User
     /// should load the fonts and build the texture before creating the
@@ -233,6 +245,8 @@ private:
     /// Variable to hold the size of the window which must be set after calling
     /// SafeResize()
     ImVec2 mResize;
+
+    Anchor mResizeAnchor;
 
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
