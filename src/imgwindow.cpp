@@ -4,6 +4,7 @@
 
 #include "XPLMDataAccess.h"
 #include "XPLMGraphics.h"
+#include "XPLMProcessing.h"
 
 #include "imgwindow.h"
 
@@ -12,7 +13,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #elif IBM
+
 #include <gl/GL.h>
+
 #else
 #include <OpenGL/gl.h>
 #endif
@@ -495,6 +498,35 @@ ImgWindow::updateImGui() {
     ImGui::SetCurrentContext(mImGuiContext);
     auto &io = ImGui::GetIO();
 
+    // check the window is within the screen size (for self decorated)
+    if (mDecoration == xplm_WindowDecorationSelfDecorated) {
+        int sWidth, sHeight;
+        bool needResize = false;
+        XPLMGetScreenSize(&sWidth, &sHeight);
+        if (mLeft < 0) {
+            mLeft = 0;
+            mRight = mWidth;
+            needResize = true;
+        }
+        if (mRight > sWidth) {
+            mRight = sWidth;
+            mLeft = mRight - mWidth;
+            needResize = true;
+        }
+        if (mBottom < 0) {
+            mBottom = 0;
+            mTop = mHeight;
+            needResize = true;
+        }
+        if (mTop > sHeight) {
+            mTop = sHeight;
+            mBottom = mTop - mHeight;
+            needResize = true;
+        }
+        if (needResize)
+            XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+    }
+
     // transfer the window geometry to ImGui
     XPLMGetWindowGeometry(mWindowID, &mLeft, &mTop, &mRight, &mBottom);
 
@@ -515,6 +547,10 @@ ImgWindow::updateImGui() {
         translateToImGuiSpace(mouse_x, mouse_y, outX, outY);
         io.MousePos = ImVec2(outX, outY);
     }
+
+    float time = XPLMGetElapsedTime();
+    io.DeltaTime = time - mLastTimeDrawn;
+    mLastTimeDrawn = time;
 
     ImGui::NewFrame();
 
@@ -593,22 +629,15 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
                                        int button) {
     ImGui::SetCurrentContext(mImGuiContext);
     ImGuiIO &io = ImGui::GetIO();
-    static int dX = 0, dY = 0;
+    static int lastX = 0, lastY = 0;
+    int dx, dy;
     static int gDragging = 0;
-
-    /// Get the windows current position once again
-    // TODO: do we really need this?
-    XPLMGetWindowGeometry(mWindowID, &mLeft, &mTop, &mRight, &mBottom);
-    mWidth = mRight - mLeft;
-    mHeight = mTop - mBottom;
 
     if (io.WantCaptureMouse) {
         switch (inMouse) {
             case xplm_MouseDown:
                 if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
                     !ImGui::IsAnyItemHovered()) {
-                    dX = x - mLeft;
-                    dY = y - mTop;
                     gDragging = 1;
                 }
                 io.MouseDown[button] = true;
@@ -618,12 +647,14 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
                 // and only if the mouse coordinates really changed!
                 // Otherwise the window could not be resized
                 // FIXME: fix resizing for different anchor points
+                dx = x - lastX;
+                dy = y - lastY;
                 if (mDecoration != xplm_WindowDecorationRoundRectangle &&
-                    gDragging && (mLeft != (x - dX) || mTop != (y - dY))) {
-                    mLeft = (x - dX);
-                    mRight = mLeft + mWidth;
-                    mTop = (y - dY);
-                    mBottom = mTop - mHeight;
+                    gDragging && (dx || dy)) {
+                    mLeft += dx;
+                    mRight += dx;
+                    mTop += dy;
+                    mBottom += dy;
                     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight,
                                           mBottom);
                 }
@@ -637,6 +668,8 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
                 // dunno!
                 break;
         }
+        lastX = x;
+        lastY = y;
         return 1;
     } else
         return 0;
@@ -731,6 +764,8 @@ void ImgWindow::SetGravity(float inLeftGravity, float inTopGravity,
 }
 
 void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor) {
+    mWidth = width;
+    mHeight = height;
     switch (anchor) {
         case TopLeft:
             mRight = mLeft + width;
