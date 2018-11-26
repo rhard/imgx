@@ -35,8 +35,15 @@ FILE(GLOB CPP_SRCS
         imgui/imgui_widgets.cpp
         )
 
-add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/gui.cpp test/gui.h)
-target_link_libraries(imgx_test CONAN_PKG::xplane_sdk opengl32)
+add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/testwindow.cpp test/testwindow.h)
+target_link_libraries(imgx_test CONAN_PKG::xplane_sdk)
+if(APPLE)
+    target_sources(imgx_test PRIVATE src/osx_clipboard.mm)
+    target_link_libraries(imgx_test "-framework OpenGL" "-framework AppKit")
+endif()
+if(WIN32)
+    target_link_libraries(imgx_test opengl32)
+endif()
 
 set_target_properties(imgx_test PROPERTIES PREFIX "")
 set_target_properties(imgx_test PROPERTIES OUTPUT_NAME "imgx_test")
