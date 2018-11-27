@@ -24,19 +24,19 @@ Change your directory using this command:
 
 ```cd xp11_imgx_plugin_builder```
 
-Get the imgx repository using this command:
+Get the imgx repository:
 
 ```git clone --recursive https://github.com/rhard/imgx.git```
 
-Change your directory using this command:
+Change your directory:
 
 ```cd imgx```
 
-Create build directory with this command:
+Create build directory:
 
 ```mkdir build```
 
-Change your directory using this command:
+Change your directory:
 
 ```cd build```
 
