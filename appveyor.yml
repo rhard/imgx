@@ -1,0 +1,35 @@
+version: "{build}"
+
+image:
+  - Visual Studio 2017
+
+platform: x64
+
+environment:
+  PYTHON: "C:\\Python27"
+  PYTHON_VERSION: "2.7.8"
+  PYTHON_ARCH: "32"
+  MSVC_DEFAULT_OPTIONS: ON
+  #CMAKE_TOOLCHAIN_FILE: -DCMAKE_TOOLCHAIN_FILE="C:\tools\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  matrix:
+    - CMAKE_GENERATOR: -G"Visual Studio 15 2017 Win64"
+      CMAKE_TOOLCHAIN: -T"v141"
+
+configuration:
+  - Debug
+  - Release
+
+init:
+  - cmd: cmake --version
+  - cmd: msbuild /version
+
+install:
+  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - pip.exe install conan --upgrade
+  - conan remote add rhard "https://api.bintray.com/conan/rhard/conan"
+
+build_script:
+  - cmd: mkdir build
+  - cmd: conan install . -if build
+  - cmd: cmake %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%configuration%
+  - cmd: cmake --build . --target imgx_test
