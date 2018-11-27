@@ -3,14 +3,10 @@
 set -e
 set -x
 
-if [[ "$(uname -s)" == 'Darwin' ]]; then
-    if which pyenv > /dev/null; then
-        eval "$(pyenv init -)"
-    fi
-    pyenv activate conan
+if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+    # Run with native
+    .travis/run_project_build.sh
+else
+    # Run with docker
+    docker run -v$(pwd):/home/conan $DOCKER_IMAGE bash -c "pip install conan --upgrade && sudo apt-get update && sudo apt-get -y install mesa-common-dev && .travis/run_project_build.sh"
 fi
-
-conan remote add rhard "https://api.bintray.com/conan/rhard/conan"
-conan install .
-cmake .
-cmake --build . --target imgx_test

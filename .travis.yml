@@ -1,35 +1,30 @@
 
+os: linux
+services:
+   - docker
+sudo: required
+language: python
 env:
+  matrix:
+    - DOCKER_IMAGE=conanio/gcc64
+    - DOCKER_IMAGE=conanio/gcc72
+    - DOCKER_IMAGE=conanio/gcc8
+    - DOCKER_IMAGE=conanio/clang39
+    - DOCKER_IMAGE=conanio/clang40
+    - DOCKER_IMAGE=conanio/clang50
+    - DOCKER_IMAGE=conanio/clang60
+    - DOCKER_IMAGE=conanio/clang7
 
-linux: &linux
-   os: linux
-   sudo: required
-   language: python
-   python: "3.6"
-   services:
-     - docker
-osx: &osx
-   os: osx
-   language: generic
 matrix:
    include:
 
-      - <<: *linux
-        env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6
-
-      - <<: *linux
-        env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7
-
-      - <<: *linux
-        env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40
-
-      - <<: *osx
+      - os: osx
         osx_image: xcode9.2
-        env: CONAN_APPLE_CLANG_VERSIONS=9.0
+        language: generic
 
-      - <<: *osx
+      - os: osx
         osx_image: xcode9.3
-        env: CONAN_APPLE_CLANG_VERSIONS=9.1
+        language: generic
 
 install:
   - chmod +x .travis/install.sh
@@ -37,4 +32,5 @@ install:
 
 script:
   - chmod +x .travis/run.sh
+  - chmod +x .travis/run_project_build.sh
   - ./.travis/run.sh
