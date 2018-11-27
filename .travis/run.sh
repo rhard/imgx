@@ -12,5 +12,5 @@ fi
 
 conan remote add rhard "https://api.bintray.com/conan/rhard/conan"
 conan install .
-cmake
+cmake .
 cmake --build . --target imgx_test
