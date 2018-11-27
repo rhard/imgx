@@ -24,6 +24,7 @@ init:
   - cmd: msbuild /version
 
 install:
+  - git submodule update --init --recursive
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
   - conan remote add rhard "https://api.bintray.com/conan/rhard/conan"
