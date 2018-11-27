@@ -33,4 +33,4 @@ build_script:
   - cmd: mkdir build
   - cmd: conan install .
   - cmd: cmake %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%configuration%
-  - cmd: cmake --build . --target imgx_test
+  - cmd: cmake --build . --target imgx_test --config %configuration%
