@@ -394,20 +394,18 @@ ImgWindow::renderImGui() {
 
     updateMatrices();
 
-    // We are using the OpenGL fixed pipeline because messing with the
-    // shader-state in X-Plane is not very well documented, but using the fixed
-    // function pipeline is.
-
-    // 1TU + Alpha settings, no depth, no fog.
+    GLint last_texture;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     XPLMSetGraphicsState(0, 1, 0, 1, 1, 0, 0);
-    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_CULL_FACE);
     glEnable(GL_SCISSOR_TEST);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glEnable(GL_TEXTURE_2D);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -458,15 +456,14 @@ ImgWindow::renderImGui() {
         }
     }
 
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
     // Restore modified state
-    glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glBindTexture(GL_TEXTURE_2D, (GLuint)last_texture);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
     glPopAttrib();
-    glPopClientAttrib();
 }
 
 void
