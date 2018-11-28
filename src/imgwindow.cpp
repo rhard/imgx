@@ -394,9 +394,11 @@ ImgWindow::renderImGui() {
 
     updateMatrices();
 
+    XPLMSetGraphicsState(0, 1, 0, 1, 1, 0, 0);
     GLint last_texture;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    XPLMSetGraphicsState(0, 1, 0, 1, 1, 0, 0);
+    GLint last_polygon_mode[2];
+    glGetIntegerv(GL_POLYGON_MODE, last_polygon_mode);
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_CULL_FACE);
@@ -433,7 +435,6 @@ ImgWindow::renderImGui() {
             if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                //XPLMBindTexture2d(GL_TEXTURE_2D, (int) (intptr_t) pcmd->TextureId);
                 glBindTexture(GL_TEXTURE_2D,
                               (GLuint) (intptr_t) pcmd->TextureId);
                 // Scissors work in viewport space - must translate the coordinates from ImGui -> Boxels, then Boxels -> Native.
@@ -460,10 +461,12 @@ ImgWindow::renderImGui() {
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, (GLuint)last_texture);
+    glBindTexture(GL_TEXTURE_2D, (GLuint) last_texture);
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glPopAttrib();
+    glPolygonMode(GL_FRONT, last_polygon_mode[0]);
+    glPolygonMode(GL_BACK, last_polygon_mode[1]);
 }
 
 void
