@@ -5,7 +5,7 @@ Another ImGui port for X-Plane
 [![Build status](https://ci.appveyor.com/api/projects/status/5j47wbf9tibufse8?svg=true)](https://ci.appveyor.com/project/rhard/imgx)
 [![Build Status](https://travis-ci.org/rhard/imgx.svg?branch=master)](https://travis-ci.org/rhard/imgx)
 
-## How to build example plugin from this repository on Ubuntu 16.04 LTS. Same recepy could be used on Windows and Mac OS.
+## How to build example plugin from this repository on Ubuntu 16.04 LTS. Same recipe could be used on Windows and Mac OS.
 
 You need to have valid Python 2 or 3, Cmake, GCC or Clang compiler. You also need an OpenGL dev package (ie. *mesa-common-dev*).
 Next you will need to install **conan** package manager and I used this command:
