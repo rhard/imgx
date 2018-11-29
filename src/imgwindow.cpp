@@ -487,8 +487,8 @@ ImgWindow::renderImGui() {
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glPopAttrib();
-    glPolygonMode(GL_FRONT, last_polygon_mode[0]);
-    glPolygonMode(GL_BACK, last_polygon_mode[1]);
+    glPolygonMode(GL_FRONT, (GLenum)last_polygon_mode[0]);
+    glPolygonMode(GL_BACK, (GLenum)last_polygon_mode[1]);
 }
 
 void
