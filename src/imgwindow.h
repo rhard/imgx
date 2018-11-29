@@ -255,7 +255,7 @@ private:
     /// Variable to hold resize anchor
     Anchor mResizeAnchor;
 
-    float mLastTimeDrawn;
+    float mLastTimeDrawn = 0;
 
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
