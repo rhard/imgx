@@ -331,6 +331,28 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
             break;
     }
 
+    // check the window is within the screen size (for self decorated)
+    if (mDecoration == xplm_WindowDecorationSelfDecorated) {
+        int sLeft, sTop, sRight, sBotoom;
+        XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBotoom);
+        if (mLeft < sLeft) {
+            mLeft = sLeft;
+            mRight = sLeft + mWidth;
+        }
+        if (mRight > sRight) {
+            mRight = sRight;
+            mLeft = sRight - mWidth;
+        }
+        if (mBottom < sBotoom) {
+            mBottom = sBotoom;
+            mTop = sBotoom + mHeight;
+        }
+        if (mTop > sTop) {
+            mTop = sTop;
+            mBottom = sTop - mHeight;
+        }
+    }
+
     XPLMCreateWindow_t windowParams = {
             sizeof(windowParams),
             mLeft,
@@ -500,27 +522,27 @@ ImgWindow::updateImGui() {
 
     // check the window is within the screen size (for self decorated)
     if (mDecoration == xplm_WindowDecorationSelfDecorated) {
-        int sWidth, sHeight;
         bool needResize = false;
-        XPLMGetScreenSize(&sWidth, &sHeight);
-        if (mLeft < 0) {
-            mLeft = 0;
-            mRight = mWidth;
+        int sLeft, sTop, sRight, sBotoom;
+        XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBotoom);
+        if (mLeft < sLeft) {
+            mLeft = sLeft;
+            mRight = sLeft + mWidth;
             needResize = true;
         }
-        if (mRight > sWidth) {
-            mRight = sWidth;
-            mLeft = mRight - mWidth;
+        if (mRight > sRight) {
+            mRight = sRight;
+            mLeft = sRight - mWidth;
             needResize = true;
         }
-        if (mBottom < 0) {
-            mBottom = 0;
-            mTop = mHeight;
+        if (mBottom < sBotoom) {
+            mBottom = sBotoom;
+            mTop = sBotoom + mHeight;
             needResize = true;
         }
-        if (mTop > sHeight) {
-            mTop = sHeight;
-            mBottom = mTop - mHeight;
+        if (mTop > sTop) {
+            mTop = sTop;
+            mBottom = sTop - mHeight;
             needResize = true;
         }
         if (needResize)
@@ -629,50 +651,47 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
                                        int button) {
     ImGui::SetCurrentContext(mImGuiContext);
     ImGuiIO &io = ImGui::GetIO();
-    static int lastX = 0, lastY = 0;
+    static int lastX = x, lastY = y;
     int dx, dy;
     static int gDragging = 0;
 
-    if (io.WantCaptureMouse) {
-        switch (inMouse) {
-            case xplm_MouseDown:
-                if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
-                    !ImGui::IsAnyItemHovered()) {
-                    gDragging = 1;
-                }
-                io.MouseDown[button] = true;
-                break;
-            case xplm_MouseDrag:
-                // Drag only if we use window without X-Plane decorations
-                // and only if the mouse coordinates really changed!
-                // Otherwise the window could not be resized
-                // FIXME: fix resizing for different anchor points
-                dx = x - lastX;
-                dy = y - lastY;
-                if (mDecoration != xplm_WindowDecorationRoundRectangle &&
-                    gDragging && (dx || dy)) {
-                    mLeft += dx;
-                    mRight += dx;
-                    mTop += dy;
-                    mBottom += dy;
-                    XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight,
-                                          mBottom);
-                }
-                io.MouseDown[button] = true;
-                break;
-            case xplm_MouseUp:
-                io.MouseDown[button] = false;
-                gDragging = 0;
-                break;
-            default:
-                // dunno!
-                break;
-        }
-        lastX = x;
-        lastY = y;
-        return 1;
-    } else
-        return 0;
+    switch (inMouse) {
+        case xplm_MouseDown:
+            if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
+                !ImGui::IsAnyItemHovered()) {
+                gDragging = 1;
+            }
+            io.MouseDown[button] = true;
+            break;
+        case xplm_MouseDrag:
+            // Drag only if we use window without X-Plane decorations
+            // and only if the mouse coordinates really changed!
+            // Otherwise the window could not be resized
+            // FIXME: fix resizing for different anchor points
+            dx = x - lastX;
+            dy = y - lastY;
+            if (mDecoration != xplm_WindowDecorationRoundRectangle &&
+                gDragging && (dx || dy)) {
+                mLeft += dx;
+                mRight += dx;
+                mTop += dy;
+                mBottom += dy;
+                XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight,
+                                      mBottom);
+            }
+            io.MouseDown[button] = true;
+            break;
+        case xplm_MouseUp:
+            io.MouseDown[button] = false;
+            gDragging = 0;
+            break;
+        default:
+            // dunno!
+            break;
+    }
+    lastX = x;
+    lastY = y;
+    return 1;
 }
 
 void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
