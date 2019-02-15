@@ -372,6 +372,16 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     };
     mWindowID = XPLMCreateWindowEx(&windowParams);
     XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode, -1);
+
+    XPLMCreateFlightLoop_t flightLoopParameters = {
+        sizeof(flightLoopParameters),
+        xplm_FlightLoop_Phase_AfterFlightModel,
+        flightLoopHandler,
+        reinterpret_cast<void *>(this)
+    };
+
+    flightLoopID = XPLMCreateFlightLoop(&flightLoopParameters);
+    XPLMScheduleFlightLoop(flightLoopID, -1.0f, true);
 }
 
 void
@@ -386,6 +396,7 @@ ImgWindow::~ImgWindow() {
         glDeleteTextures(1, &t);
     }
     ImGui::DestroyContext();
+    XPLMDestroyFlightLoop(flightLoopID);
     XPLMDestroyWindow(mWindowID);
 }
 
@@ -624,21 +635,6 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     ImGui::Render();
 
     thisWindow->renderImGui();
-
-    if (thisWindow->mSelfHide) {
-        XPLMSetWindowIsVisible(thisWindow->mWindowID, false);
-        thisWindow->mSelfHide = false;
-    }
-
-    if (thisWindow->mSelfResize) {
-        thisWindow->Resize(thisWindow->mResizeWidth, thisWindow->mResizeHeight,
-                           thisWindow->mResizeAnchor);
-        thisWindow->mSelfResize = false;
-    }
-
-    if (thisWindow->mSelfDestruct) {
-        delete thisWindow;
-    }
 }
 
 int ImgWindow::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y,
@@ -692,6 +688,27 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
     lastX = x;
     lastY = y;
     return 1;
+}
+
+float ImgWindow::flightLoopHandler(float inElapsedSinceLastCall, float inElapsedTimeSinceLastFlightLoop, int inCounter, void * inRefcon)
+{
+    auto *thisWindow = reinterpret_cast<ImgWindow *>(inRefcon);
+
+    if (thisWindow->mSelfHide) {
+        XPLMSetWindowIsVisible(thisWindow->mWindowID, false);
+        thisWindow->mSelfHide = false;
+    }
+
+    if (thisWindow->mSelfResize) {
+        thisWindow->Resize(thisWindow->mResizeWidth, thisWindow->mResizeHeight,
+            thisWindow->mResizeAnchor);
+        thisWindow->mSelfResize = false;
+    }
+
+    if (thisWindow->mSelfDestruct) {
+        delete thisWindow;
+    }
+    return -1.0f;
 }
 
 void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,

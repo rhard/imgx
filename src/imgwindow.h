@@ -6,6 +6,7 @@
 #define IMGWINDOW_H
 
 #include "XPLMDisplay.h"
+#include "XPLMProcessing.h"
 #include "imgui.h"
 
 #include <string>
@@ -232,6 +233,12 @@ private:
             XPLMMouseStatus inMouse,
             int button = 0);
 
+    static float flightLoopHandler(
+        float                inElapsedSinceLastCall,
+        float                inElapsedTimeSinceLastFlightLoop,
+        int                  inCounter,
+        void *               inRefcon);
+
     void renderImGui();
 
     void updateImGui();
@@ -260,6 +267,8 @@ private:
     XPLMWindowLayer mPreferredLayer;
     XPLMWindowDecoration mDecoration;
     XPLMWindowPositioningMode mPreferredPositioningMode;
+
+    XPLMFlightLoopID flightLoopID;
 };
 
 #endif //IMGWINDOW_H
