@@ -45,7 +45,7 @@ static bool getTextFromClipboard(std::string &outText) {
     LPSTR lptstr;
     bool retVal = false;
     static XPLMDataRef hwndDataRef = XPLMFindDataRef(
-            "sim/operation/windows/system_window");
+                "sim/operation/windows/system_window");
     HWND hwndMain = (HWND) (uintptr_t) XPLMGetDatai(hwndDataRef);
 
     if (!IsClipboardFormatAvailable(CF_TEXT))
@@ -138,7 +138,7 @@ static bool setTextToClipboard(const std::string &inText) {
     LPSTR lptstrCopy;
     HGLOBAL hglbCopy;
     static XPLMDataRef hwndDataRef = XPLMFindDataRef(
-            "sim/operation/windows/system_window");
+                "sim/operation/windows/system_window");
     HWND hwndMain = (HWND) (uintptr_t) XPLMGetDatai(hwndDataRef);
 
     if (!OpenClipboard(hwndMain))
@@ -181,7 +181,7 @@ static const char *getClipboardImGuiWrapper(void *user_data) {
 }
 
 static void setClipboardImGuiWrapper(void *user_data, const char
-*text) {
+                                     *text) {
     std::string _text(text);
     setTextToClipboard(_text);
 }
@@ -226,10 +226,10 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     if (!first_init) {
         gVrEnabledRef = XPLMFindDataRef("sim/graphics/VR/enabled");
         gModelViewMatrixRef = XPLMFindDataRef(
-                "sim/graphics/view/modelview_matrix");
+                    "sim/graphics/view/modelview_matrix");
         gViewportRef = XPLMFindDataRef("sim/graphics/view/viewport");
         gProjectionMatrixRef = XPLMFindDataRef(
-                "sim/graphics/view/projection_matrix");
+                    "sim/graphics/view/projection_matrix");
         first_init = true;
     }
     // clipboard data
@@ -297,38 +297,38 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     mHeight = height;
 
     switch (anchor) {
-        case TopLeft:
-            mLeft = x;
-            mRight = mLeft + width;
-            mTop = y;
-            mBottom = mTop - height;
-            break;
-        case TopRight:
-            mRight = x;
-            mLeft = mRight - width;
-            mTop = y;
-            mBottom = mTop - height;
-            break;
-        case BottomLeft:
-            mLeft = x;
-            mRight = mLeft + width;
-            mBottom = y;
-            mTop = mBottom + height;
-            break;
-        case BottomRight:
-            mRight = x;
-            mLeft = mRight - width;
-            mBottom = y;
-            mTop = mBottom + height;
-            break;
-        case Center:
-            mLeft = x - width / 2;
-            mRight = mLeft + width;
-            mTop = y + height / 2;
-            mBottom = mTop - height;
-            break;
-        default:
-            break;
+    case TopLeft:
+        mLeft = x;
+        mRight = mLeft + width;
+        mTop = y;
+        mBottom = mTop - height;
+        break;
+    case TopRight:
+        mRight = x;
+        mLeft = mRight - width;
+        mTop = y;
+        mBottom = mTop - height;
+        break;
+    case BottomLeft:
+        mLeft = x;
+        mRight = mLeft + width;
+        mBottom = y;
+        mTop = mBottom + height;
+        break;
+    case BottomRight:
+        mRight = x;
+        mLeft = mRight - width;
+        mBottom = y;
+        mTop = mBottom + height;
+        break;
+    case Center:
+        mLeft = x - width / 2;
+        mRight = mLeft + width;
+        mTop = y + height / 2;
+        mBottom = mTop - height;
+        break;
+    default:
+        break;
     }
 
     // check the window is within the screen size (for self decorated)
@@ -354,21 +354,21 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     }
 
     XPLMCreateWindow_t windowParams = {
-            sizeof(windowParams),
-            mLeft,
-            mTop,
-            mRight,
-            mBottom,
-            0,
-            drawWindowCB,
-            handleMouseClickCB,
-            handleKeyFuncCB,
-            handleCursorFuncCB,
-            handleMouseWheelFuncCB,
-            reinterpret_cast<void *>(this),
-            mDecoration,
-            layer,
-            handleRightClickFuncCB,
+        sizeof(windowParams),
+        mLeft,
+        mTop,
+        mRight,
+        mBottom,
+        0,
+        drawWindowCB,
+        handleMouseClickCB,
+        handleKeyFuncCB,
+        handleCursorFuncCB,
+        handleMouseWheelFuncCB,
+        reinterpret_cast<void *>(this),
+        mDecoration,
+        layer,
+        handleRightClickFuncCB,
     };
     mWindowID = XPLMCreateWindowEx(&windowParams);
     XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode, -1);
@@ -412,9 +412,9 @@ ImgWindow::boxelsToNative(int x, int y, int &outX, int &outY) {
     ndc[1] *= ndc[3];
 
     outX = static_cast<int>((ndc[0] * 0.5f + 0.5f) * mViewport[2] +
-                            mViewport[0]);
+            mViewport[0]);
     outY = static_cast<int>((ndc[1] * 0.5f + 0.5f) * mViewport[3] +
-                            mViewport[1]);
+            mViewport[1]);
 }
 
 void
@@ -427,79 +427,70 @@ ImgWindow::renderImGui() {
 
     updateMatrices();
 
+    // We are using the OpenGL fixed pipeline because messing with the
+    // shader-state in X-Plane is not very well documented, but using the fixed
+    // function pipeline is.
+
+    // 1TU + Alpha settings, no depth, no fog.
     XPLMSetGraphicsState(0, 1, 0, 1, 1, 0, 0);
     GLint last_texture;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    GLint last_polygon_mode[2];
-    glGetIntegerv(GL_POLYGON_MODE, last_polygon_mode);
+    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
     glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_CULL_FACE);
     glEnable(GL_SCISSOR_TEST);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glEnable(GL_TEXTURE_2D);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glScalef(1.0f, -1.0f, 1.0f);
-    glTranslatef(static_cast<GLfloat>(mLeft), static_cast<GLfloat>(-mTop),
-                 0.0f);
+    glTranslatef(static_cast<GLfloat>(mLeft), static_cast<GLfloat>(-mTop), 0.0f);
 
     // Render command lists
-    for (int n = 0; n < draw_data->CmdListsCount; n++) {
-        const ImDrawList *cmd_list = draw_data->CmdLists[n];
-        const ImDrawVert *vtx_buffer = cmd_list->VtxBuffer.Data;
-        const ImDrawIdx *idx_buffer = cmd_list->IdxBuffer.Data;
-        glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-                        (const GLvoid *) ((const char *) vtx_buffer +
-                                          IM_OFFSETOF(ImDrawVert, pos)));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert),
-                          (const GLvoid *) ((const char *) vtx_buffer +
-                                            IM_OFFSETOF(ImDrawVert, uv)));
-        glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert),
-                       (const GLvoid *) ((const char *) vtx_buffer +
-                                         IM_OFFSETOF(ImDrawVert, col)));
+    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    {
+        const ImDrawList* cmd_list = draw_data->CmdLists[n];
+        const ImDrawVert* vtx_buffer = cmd_list->VtxBuffer.Data;
+        const ImDrawIdx* idx_buffer = cmd_list->IdxBuffer.Data;
+        glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid*)((const char*)vtx_buffer + IM_OFFSETOF(ImDrawVert, pos)));
+        glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid*)((const char*)vtx_buffer + IM_OFFSETOF(ImDrawVert, uv)));
+        glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (const GLvoid*)((const char*)vtx_buffer + IM_OFFSETOF(ImDrawVert, col)));
 
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
-            const ImDrawCmd *pcmd = &cmd_list->CmdBuffer[cmd_i];
+        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+        {
+            const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                glBindTexture(GL_TEXTURE_2D,
-                              (GLuint) (intptr_t) pcmd->TextureId);
+                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+
                 // Scissors work in viewport space - must translate the coordinates from ImGui -> Boxels, then Boxels -> Native.
                 //FIXME: it must be possible to apply the scale+transform manually to the projection matrix so we don't need to doublestep.
                 int bTop, bLeft, bRight, bBottom;
-                translateImGuiToBoxel(pcmd->ClipRect.x, pcmd->ClipRect.y, bLeft,
-                                      bTop);
-                translateImGuiToBoxel(pcmd->ClipRect.z, pcmd->ClipRect.w,
-                                      bRight, bBottom);
+                translateImGuiToBoxel(pcmd->ClipRect.x, pcmd->ClipRect.y, bLeft, bTop);
+                translateImGuiToBoxel(pcmd->ClipRect.z, pcmd->ClipRect.w, bRight, bBottom);
                 int nTop, nLeft, nRight, nBottom;
                 boxelsToNative(bLeft, bTop, nLeft, nTop);
                 boxelsToNative(bRight, bBottom, nRight, nBottom);
-                glScissor(nLeft, nBottom, nRight - nLeft, nTop - nBottom);
-                glDrawElements(GL_TRIANGLES, (GLsizei) pcmd->ElemCount,
-                               sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
-                                                      : GL_UNSIGNED_INT,
-                               idx_buffer);
+                glScissor(nLeft, nBottom, nRight-nLeft, nTop-nBottom);
+                glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer);
             }
             idx_buffer += pcmd->ElemCount;
         }
     }
 
-    // Restore modified state
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glBindTexture(GL_TEXTURE_2D, (GLuint) last_texture);
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
+    // Restore modified state
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBindTexture(GL_TEXTURE_2D, last_texture);
     glPopAttrib();
-    glPolygonMode(GL_FRONT, (GLenum)last_polygon_mode[0]);
-    glPolygonMode(GL_BACK, (GLenum)last_polygon_mode[1]);
+    glPopClientAttrib();
 }
 
 void
@@ -615,8 +606,8 @@ void ImgWindow::PreBuildInterface() {
     // set windows position and size
     ImGui::SetNextWindowPos(ImVec2((float) 0.0, (float) 0.0), ImGuiCond_Always);
     ImGui::SetNextWindowSize(
-            ImVec2(static_cast<float>(mWidth), static_cast<float>(mHeight)),
-            ImGuiCond_Always);
+                ImVec2(static_cast<float>(mWidth), static_cast<float>(mHeight)),
+                ImGuiCond_Always);
 
     // and construct the window
     ImGui::Begin(mWindowTitle.c_str(), nullptr,
@@ -652,38 +643,38 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
     static int gDragging = 0;
 
     switch (inMouse) {
-        case xplm_MouseDown:
-            if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
+    case xplm_MouseDown:
+        if ((mDecoration != xplm_WindowDecorationRoundRectangle) &&
                 !ImGui::IsAnyItemHovered()) {
-                gDragging = 1;
-            }
-            io.MouseDown[button] = true;
-            break;
-        case xplm_MouseDrag:
-            // Drag only if we use window without X-Plane decorations
-            // and only if the mouse coordinates really changed!
-            // Otherwise the window could not be resized
-            // FIXME: fix resizing for different anchor points
-            dx = x - lastX;
-            dy = y - lastY;
-            if (mDecoration != xplm_WindowDecorationRoundRectangle &&
+            gDragging = 1;
+        }
+        io.MouseDown[button] = true;
+        break;
+    case xplm_MouseDrag:
+        // Drag only if we use window without X-Plane decorations
+        // and only if the mouse coordinates really changed!
+        // Otherwise the window could not be resized
+        // FIXME: fix resizing for different anchor points
+        dx = x - lastX;
+        dy = y - lastY;
+        if (mDecoration != xplm_WindowDecorationRoundRectangle &&
                 gDragging && (dx || dy)) {
-                mLeft += dx;
-                mRight += dx;
-                mTop += dy;
-                mBottom += dy;
-                XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight,
-                                      mBottom);
-            }
-            io.MouseDown[button] = true;
-            break;
-        case xplm_MouseUp:
-            io.MouseDown[button] = false;
-            gDragging = 0;
-            break;
-        default:
-            // dunno!
-            break;
+            mLeft += dx;
+            mRight += dx;
+            mTop += dy;
+            mBottom += dy;
+            XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight,
+                                  mBottom);
+        }
+        io.MouseDown[button] = true;
+        break;
+    case xplm_MouseUp:
+        io.MouseDown[button] = false;
+        gDragging = 0;
+        break;
+    default:
+        // dunno!
+        break;
     }
     lastX = x;
     lastY = y;
@@ -701,7 +692,7 @@ float ImgWindow::flightLoopHandler(float inElapsedSinceLastCall, float inElapsed
 
     if (thisWindow->mSelfResize) {
         thisWindow->Resize(thisWindow->mResizeWidth, thisWindow->mResizeHeight,
-            thisWindow->mResizeAnchor);
+                           thisWindow->mResizeAnchor);
         thisWindow->mSelfResize = false;
     }
 
@@ -725,9 +716,9 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
         io.KeyCtrl = (inFlags & xplm_ControlFlag) == xplm_ControlFlag;
 
         if ((inFlags & xplm_DownFlag) == xplm_DownFlag
-            && !io.KeyCtrl
-            && !io.KeyAlt
-            && isprint(inKey)) {
+                && !io.KeyCtrl
+                && !io.KeyAlt
+                && isprint(inKey)) {
             char smallStr[2] = {inKey, 0};
             io.AddInputCharactersUTF8(smallStr);
         }
@@ -756,15 +747,15 @@ int ImgWindow::handleMouseWheelFuncCB(XPLMWindowID inWindowID, int x, int y,
     thisWindow->translateToImGuiSpace(x, y, outX, outY);
     io.MousePos = ImVec2(outX, outY);
     switch (wheel) {
-        case 0:
-            io.MouseWheel = static_cast<float>(clicks);
-            break;
-        case 1:
-            io.MouseWheelH = static_cast<float>(clicks);
-            break;
-        default:
-            // unknown wheel
-            break;
+    case 0:
+        io.MouseWheel = static_cast<float>(clicks);
+        break;
+    case 1:
+        io.MouseWheelH = static_cast<float>(clicks);
+        break;
+    default:
+        // unknown wheel
+        break;
     }
     return 1;
 }
@@ -803,68 +794,68 @@ void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor) {
     mWidth = width;
     mHeight = height;
     switch (anchor) {
-        case TopLeft:
-            mRight = mLeft + width;
-            mBottom = mTop - height;
-            break;
-        case TopRight:
-            mLeft = mRight - width;
-            mBottom = mTop - height;
-            break;
-        case BottomLeft:
-            mRight = mLeft + width;
-            mTop = mBottom + height;
-            break;
-        case BottomRight:
-            mLeft = mRight - width;
-            mTop = mBottom + height;
-            break;
-        case Center:
-            mLeft = (2 * mLeft + mWidth - width) / 2;
-            mRight = mLeft + width;
-            mBottom = (2 * mBottom + mHeight - height) / 2;
-            mTop = mBottom + height;
-            break;
-        default:
-            break;
+    case TopLeft:
+        mRight = mLeft + width;
+        mBottom = mTop - height;
+        break;
+    case TopRight:
+        mLeft = mRight - width;
+        mBottom = mTop - height;
+        break;
+    case BottomLeft:
+        mRight = mLeft + width;
+        mTop = mBottom + height;
+        break;
+    case BottomRight:
+        mLeft = mRight - width;
+        mTop = mBottom + height;
+        break;
+    case Center:
+        mLeft = (2 * mLeft + mWidth - width) / 2;
+        mRight = mLeft + width;
+        mBottom = (2 * mBottom + mHeight - height) / 2;
+        mTop = mBottom + height;
+        break;
+    default:
+        break;
     }
     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
 
 void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor) {
     switch (anchor) {
-        case TopLeft:
-            mLeft = x;
-            mRight = mLeft + mWidth;
-            mTop = y;
-            mBottom = mTop - mHeight;
-            break;
-        case TopRight:
-            mRight = x;
-            mLeft = mRight - mWidth;
-            mTop = y;
-            mBottom = mTop - mHeight;
-            break;
-        case BottomLeft:
-            mLeft = x;
-            mRight = mLeft + mWidth;
-            mBottom = y;
-            mTop = mBottom + mHeight;
-            break;
-        case BottomRight:
-            mRight = x;
-            mLeft = mRight - mWidth;
-            mBottom = y;
-            mTop = mBottom + mHeight;
-            break;
-        case Center:
-            mLeft = x - mWidth / 2;
-            mRight = mLeft + mWidth;
-            mTop = y + mHeight / 2;
-            mBottom = mTop - mHeight;
-            break;
-        default:
-            break;
+    case TopLeft:
+        mLeft = x;
+        mRight = mLeft + mWidth;
+        mTop = y;
+        mBottom = mTop - mHeight;
+        break;
+    case TopRight:
+        mRight = x;
+        mLeft = mRight - mWidth;
+        mTop = y;
+        mBottom = mTop - mHeight;
+        break;
+    case BottomLeft:
+        mLeft = x;
+        mRight = mLeft + mWidth;
+        mBottom = y;
+        mTop = mBottom + mHeight;
+        break;
+    case BottomRight:
+        mRight = x;
+        mLeft = mRight - mWidth;
+        mBottom = y;
+        mTop = mBottom + mHeight;
+        break;
+    case Center:
+        mLeft = x - mWidth / 2;
+        mRight = mLeft + mWidth;
+        mTop = y + mHeight / 2;
+        mBottom = mTop - mHeight;
+        break;
+    default:
+        break;
     }
     XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
