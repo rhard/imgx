@@ -72,6 +72,15 @@ public:
     /// \param anchor anchor point to place the window
     void Place(int x, int y, Anchor anchor = TopLeft);
 
+    /// Get a text from clipboard
+    /// \param user_data - not used here
+    /// \return clipboard text
+    static const char *GetClipboardImGuiWrapper(void *user_data);
+
+    /// Set a text to clipboard
+    /// \param user_data - not used here
+    /// \param text text to set
+    static void SetClipboardImGuiWrapper(void *user_data, const char *text);
 protected:
     /// Constructs a window with optional FontAtlas
     /// \param fontAtlas shared ImFontAtlas

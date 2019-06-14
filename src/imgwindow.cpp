@@ -172,7 +172,7 @@ static bool setTextToClipboard(const std::string &inText) {
 #endif
 }
 
-static const char *getClipboardImGuiWrapper(void *user_data) {
+const char *ImgWindow::GetClipboardImGuiWrapper(void *user_data) {
     static std::string text;
     if (getTextFromClipboard(text))
         return text.c_str();
@@ -180,7 +180,7 @@ static const char *getClipboardImGuiWrapper(void *user_data) {
         return "";
 }
 
-static void setClipboardImGuiWrapper(void *user_data, const char
+void ImgWindow::SetClipboardImGuiWrapper(void *user_data, const char
                                      *text) {
     std::string _text(text);
     setTextToClipboard(_text);
@@ -233,8 +233,8 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
         first_init = true;
     }
     // clipboard data
-    io.SetClipboardTextFn = setClipboardImGuiWrapper;
-    io.GetClipboardTextFn = getClipboardImGuiWrapper;
+    io.SetClipboardTextFn = SetClipboardImGuiWrapper;
+    io.GetClipboardTextFn = GetClipboardImGuiWrapper;
 
     // we render ourselves, we don't use the DrawListsFunc
     io.RenderDrawListsFn = nullptr;
