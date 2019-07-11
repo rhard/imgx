@@ -152,9 +152,9 @@ protected:
     /// \param inMaxWidthBoxels max windows width in boxels
     /// \param inMaxHeightBoxels max windows height in boxels
     void SetResizingLimits(int inMinWidthBoxels,
-                                 int inMinHeightBoxels,
-                                 int inMaxWidthBoxels,
-                                 int inMaxHeightBoxels);
+                           int inMinHeightBoxels,
+                           int inMaxWidthBoxels,
+                           int inMaxHeightBoxels);
 
     /// An internal helper for moving the window to either it's preferred
     /// layer or the VR layer depending on if the headset is in use.
@@ -171,8 +171,8 @@ protected:
     /// Sets X-Plane window window positioning mode for the specified monitor
     /// \param mode XPLMWindowPositioningMode
     /// \param inMonitorIndex monitor for which mode is set (default to main)
-    void SetPositioningMode(XPLMWindowPositioningMode mode,
-                            int inMonitorIndex = -1);
+    void SafePositioningModeSet(XPLMWindowPositioningMode mode,
+                                int inMonitorIndex = -1);
 
     /// Sets X-Plane window gravity
     /// \param inLeftGravity left gravity (0.0 - 1.0)
@@ -243,10 +243,10 @@ private:
             int button = 0);
 
     static float flightLoopHandler(
-        float                inElapsedSinceLastCall,
-        float                inElapsedTimeSinceLastFlightLoop,
-        int                  inCounter,
-        void *               inRefcon);
+            float                inElapsedSinceLastCall,
+            float                inElapsedTimeSinceLastFlightLoop,
+            int                  inCounter,
+            void *               inRefcon);
 
     void renderImGui();
 
@@ -258,7 +258,7 @@ private:
 
     void translateToImGuiSpace(int inX, int inY, float &outX, float &outY);
 
-    bool mSelfDestruct, mSelfHide, mSelfResize;
+    bool mSelfDestruct, mSelfHide, mSelfResize, mSelfPositioning;
 
     ImGuiContext *mImGuiContext;
     XPLMWindowID mWindowID;
@@ -270,6 +270,10 @@ private:
 
     /// Variable to hold resize anchor
     Anchor mResizeAnchor;
+
+    /// Variables to provide safe positioning mode set
+    XPLMWindowPositioningMode tempPositioningMode;
+    int tempMonitorIndex;
 
     float mLastTimeDrawn = 0;
 

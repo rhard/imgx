@@ -523,7 +523,7 @@ ImgWindow::updateImGui() {
     auto &io = ImGui::GetIO();
 
     // check the window is within the screen size (for self decorated)
-    if (mDecoration == xplm_WindowDecorationSelfDecorated) {
+    if (mDecoration == xplm_WindowDecorationSelfDecorated && !mIsInVR) {
         bool needResize = false;
         int sLeft, sTop, sRight, sBotoom;
         XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBotoom);
@@ -586,9 +586,9 @@ ImgWindow::updateImGui() {
 
     // finally, handle window focus.
     int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
-    if (io.WantCaptureKeyboard && !hasKeyboardFocus) {
+    if (io.WantTextInput && !hasKeyboardFocus) {
         XPLMTakeKeyboardFocus(mWindowID);
-    } else if (!io.WantCaptureKeyboard && hasKeyboardFocus) {
+    } else if (!io.WantTextInput && hasKeyboardFocus) {
         XPLMTakeKeyboardFocus(nullptr);
         // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
         for (auto &key : io.KeysDown) {
@@ -658,7 +658,7 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
         dx = x - lastX;
         dy = y - lastY;
         if (mDecoration != xplm_WindowDecorationRoundRectangle &&
-                gDragging && (dx || dy)) {
+                gDragging && (dx || dy) && !mIsInVR) {
             mLeft += dx;
             mRight += dx;
             mTop += dy;
@@ -694,6 +694,12 @@ float ImgWindow::flightLoopHandler(float inElapsedSinceLastCall, float inElapsed
         thisWindow->Resize(thisWindow->mResizeWidth, thisWindow->mResizeHeight,
                            thisWindow->mResizeAnchor);
         thisWindow->mSelfResize = false;
+    }
+
+    if (thisWindow->mSelfPositioning) {
+        XPLMSetWindowPositioningMode(thisWindow->mWindowID, thisWindow->tempPositioningMode,
+                                     thisWindow->tempMonitorIndex);
+        thisWindow->mSelfPositioning = false;
     }
 
     if (thisWindow->mSelfDestruct) {
@@ -779,9 +785,11 @@ void ImgWindow::SetResizingLimits(int inMinWidthBoxels,
                                 inMaxWidthBoxels, inMaxHeightBoxels);
 }
 
-void ImgWindow::SetPositioningMode(XPLMWindowPositioningMode mode,
+void ImgWindow::SafePositioningModeSet(XPLMWindowPositioningMode mode,
                                    int inMonitorIndex) {
-    XPLMSetWindowPositioningMode(mWindowID, mode, inMonitorIndex);
+    tempPositioningMode = mode;
+    tempMonitorIndex = inMonitorIndex;
+    mSelfPositioning = true;
 }
 
 void ImgWindow::SetGravity(float inLeftGravity, float inTopGravity,
