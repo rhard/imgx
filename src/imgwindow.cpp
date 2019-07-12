@@ -181,7 +181,7 @@ const char *ImgWindow::GetClipboardImGuiWrapper(void *user_data) {
 }
 
 void ImgWindow::SetClipboardImGuiWrapper(void *user_data, const char
-                                     *text) {
+                                         *text) {
     std::string _text(text);
     setTextToClipboard(_text);
 }
@@ -785,8 +785,13 @@ void ImgWindow::SetResizingLimits(int inMinWidthBoxels,
                                 inMaxWidthBoxels, inMaxHeightBoxels);
 }
 
+void ImgWindow::SetPositioningMode(XPLMWindowPositioningMode mode, int inMonitorIndex)
+{
+    XPLMSetWindowPositioningMode(mWindowID, mode, inMonitorIndex);
+}
+
 void ImgWindow::SafePositioningModeSet(XPLMWindowPositioningMode mode,
-                                   int inMonitorIndex) {
+                                       int inMonitorIndex) {
     tempPositioningMode = mode;
     tempMonitorIndex = inMonitorIndex;
     mSelfPositioning = true;

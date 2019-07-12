@@ -171,6 +171,12 @@ protected:
     /// Sets X-Plane window window positioning mode for the specified monitor
     /// \param mode XPLMWindowPositioningMode
     /// \param inMonitorIndex monitor for which mode is set (default to main)
+    void SetPositioningMode(XPLMWindowPositioningMode mode,
+                            int inMonitorIndex = -1);
+
+    /// Same as previous but could be called from the UI loop
+    /// \param mode XPLMWindowPositioningMode
+    /// \param inMonitorIndex monitor for which mode is set (default to main)
     void SafePositioningModeSet(XPLMWindowPositioningMode mode,
                                 int inMonitorIndex = -1);
 
