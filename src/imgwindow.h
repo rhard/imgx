@@ -72,6 +72,12 @@ public:
     /// \param anchor anchor point to place the window
     void Place(int x, int y, Anchor anchor = TopLeft);
 
+    /// Same as previous but could be called from the UI loop
+    /// \param x x coordinate to place the window
+    /// \param y y coordinate to place the window
+    /// \param anchor anchor point to place the window
+    void SafePlace(int x, int y, Anchor anchor = TopLeft);
+
     /// Get a text from clipboard
     /// \param user_data - not used here
     /// \return clipboard text
@@ -264,18 +270,22 @@ private:
 
     void translateToImGuiSpace(int inX, int inY, float &outX, float &outY);
 
-    bool mSelfDestruct, mSelfHide, mSelfResize, mSelfPositioning;
+    // returns true if self decorated window goes out of screen.
+    // If true, the window position is updated to match screen size
+    bool checkScreenAndPlace();
+
+    bool mSelfDestruct, mSelfHide, mSelfResize, mSelfPositioning, mSelfPlace;
 
     ImGuiContext *mImGuiContext;
     XPLMWindowID mWindowID;
     bool mIsInVR;
 
-    /// Variables to hold the size of the window which must be set after calling
-    /// SafeResize()
-    int mResizeWidth, mResizeHeight;
+    /// Variables to hold the size of the window and coordinates which must be set after calling
+    /// SafeResize() and SafePlace()
+    int mResizeWidth, mResizeHeight, mX, mY;
 
-    /// Variable to hold resize anchor
-    Anchor mResizeAnchor;
+    /// Variable to hold resize and place anchor
+    Anchor mResizeAnchor, mPlaceAnchor;
 
     /// Variables to provide safe positioning mode set
     XPLMWindowPositioningMode tempPositioningMode;

@@ -509,20 +509,8 @@ ImgWindow::translateToImGuiSpace(int inX, int inY, float &outX, float &outY) {
     }
 }
 
-void
-ImgWindow::translateImGuiToBoxel(float inX, float inY, int &outX, int &outY) {
-    outX = (int) (mLeft + inX);
-    outY = (int) (mTop - inY);
-}
-
-
-void
-ImgWindow::updateImGui() {
-
-    ImGui::SetCurrentContext(mImGuiContext);
-    auto &io = ImGui::GetIO();
-
-    // check the window is within the screen size (for self decorated)
+bool ImgWindow::checkScreenAndPlace()
+{
     if (mDecoration == xplm_WindowDecorationSelfDecorated && !mIsInVR) {
         bool needResize = false;
         int sLeft, sTop, sRight, sBotoom;
@@ -547,9 +535,30 @@ ImgWindow::updateImGui() {
             mBottom = sTop - mHeight;
             needResize = true;
         }
-        if (needResize)
+        if (needResize) {
             XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+            return true;
+        }
+        return false;
     }
+    return false;
+}
+
+void
+ImgWindow::translateImGuiToBoxel(float inX, float inY, int &outX, int &outY) {
+    outX = (int) (mLeft + inX);
+    outY = (int) (mTop - inY);
+}
+
+
+void
+ImgWindow::updateImGui() {
+
+    ImGui::SetCurrentContext(mImGuiContext);
+    auto &io = ImGui::GetIO();
+
+    // check the window is within the screen size (for self decorated)
+    checkScreenAndPlace();
 
     // transfer the window geometry to ImGui
     XPLMGetWindowGeometry(mWindowID, &mLeft, &mTop, &mRight, &mBottom);
@@ -700,6 +709,11 @@ float ImgWindow::flightLoopHandler(float inElapsedSinceLastCall, float inElapsed
         XPLMSetWindowPositioningMode(thisWindow->mWindowID, thisWindow->tempPositioningMode,
                                      thisWindow->tempMonitorIndex);
         thisWindow->mSelfPositioning = false;
+    }
+
+    if (thisWindow->mSelfPlace) {
+        thisWindow->Place(thisWindow->mX, thisWindow->mY, thisWindow->mPlaceAnchor);
+        thisWindow->mSelfPlace = false;
     }
 
     if (thisWindow->mSelfDestruct) {
@@ -870,7 +884,16 @@ void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor) {
     default:
         break;
     }
-    XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+    if (!checkScreenAndPlace())
+        XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+}
+
+void ImgWindow::SafePlace(int x, int y, ImgWindow::Anchor anchor)
+{
+    mX = x;
+    mY = y;
+    mPlaceAnchor = anchor;
+    mSelfPlace = true;
 }
 
 void ImgWindow::SetVisible(bool inIsVisible) {
@@ -897,8 +920,7 @@ void ImgWindow::MoveForVR() {
         mIsInVR = true;
     } else {
         if (mIsInVR) {
-            XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode,
-                                         -1);
+            XPLMSetWindowPositioningMode(mWindowID, mPreferredPositioningMode, -1);
             mIsInVR = false;
         }
     }
