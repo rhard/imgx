@@ -166,6 +166,10 @@ protected:
     /// layer or the VR layer depending on if the headset is in use.
     void MoveForVR();
 
+    /// Check if the windows is in VR
+    /// \return true if window is in VR
+    bool IsInVR();
+
     /// Called before making the window visible. It provides an opportunity
     /// to prevent the window being shown.
     /// \note the implementation in the base-class is a null handler. You can

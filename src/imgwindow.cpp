@@ -926,6 +926,11 @@ void ImgWindow::MoveForVR() {
     }
 }
 
+bool ImgWindow::IsInVR()
+{
+    return mIsInVR;
+}
+
 bool ImgWindow::GetVisible() const {
     return XPLMGetWindowIsVisible(mWindowID) != 0;
 }
