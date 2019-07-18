@@ -511,7 +511,7 @@ ImgWindow::translateToImGuiSpace(int inX, int inY, float &outX, float &outY) {
 
 bool ImgWindow::checkScreenAndPlace()
 {
-    if (mDecoration == xplm_WindowDecorationSelfDecorated && !mIsInVR) {
+    if (mDecoration == xplm_WindowDecorationSelfDecorated && !mIsInVR && !XPLMWindowIsPoppedOut(mWindowID)) {
         bool needResize = false;
         int sLeft, sTop, sRight, sBotoom;
         XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBotoom);
@@ -667,7 +667,7 @@ int ImgWindow::handleMouseClickGeneric(int x, int y, XPLMMouseStatus inMouse,
         dx = x - lastX;
         dy = y - lastY;
         if (mDecoration != xplm_WindowDecorationRoundRectangle &&
-                gDragging && (dx || dy) && !mIsInVR) {
+                gDragging && (dx || dy) && !mIsInVR && !XPLMWindowIsPoppedOut(mWindowID)) {
             mLeft += dx;
             mRight += dx;
             mTop += dy;
@@ -818,74 +818,78 @@ void ImgWindow::SetGravity(float inLeftGravity, float inTopGravity,
 }
 
 void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor) {
-    mWidth = width;
-    mHeight = height;
-    switch (anchor) {
-    case TopLeft:
-        mRight = mLeft + width;
-        mBottom = mTop - height;
-        break;
-    case TopRight:
-        mLeft = mRight - width;
-        mBottom = mTop - height;
-        break;
-    case BottomLeft:
-        mRight = mLeft + width;
-        mTop = mBottom + height;
-        break;
-    case BottomRight:
-        mLeft = mRight - width;
-        mTop = mBottom + height;
-        break;
-    case Center:
-        mLeft = (2 * mLeft + mWidth - width) / 2;
-        mRight = mLeft + width;
-        mBottom = (2 * mBottom + mHeight - height) / 2;
-        mTop = mBottom + height;
-        break;
-    default:
-        break;
+    if (!XPLMWindowIsPoppedOut(mWindowID)) {
+        mWidth = width;
+        mHeight = height;
+        switch (anchor) {
+        case TopLeft:
+            mRight = mLeft + width;
+            mBottom = mTop - height;
+            break;
+        case TopRight:
+            mLeft = mRight - width;
+            mBottom = mTop - height;
+            break;
+        case BottomLeft:
+            mRight = mLeft + width;
+            mTop = mBottom + height;
+            break;
+        case BottomRight:
+            mLeft = mRight - width;
+            mTop = mBottom + height;
+            break;
+        case Center:
+            mLeft = (2 * mLeft + mWidth - width) / 2;
+            mRight = mLeft + width;
+            mBottom = (2 * mBottom + mHeight - height) / 2;
+            mTop = mBottom + height;
+            break;
+        default:
+            break;
+        }
+        XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
     }
-    XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
 
 void ImgWindow::Place(int x, int y, ImgWindow::Anchor anchor) {
-    switch (anchor) {
-    case TopLeft:
-        mLeft = x;
-        mRight = mLeft + mWidth;
-        mTop = y;
-        mBottom = mTop - mHeight;
-        break;
-    case TopRight:
-        mRight = x;
-        mLeft = mRight - mWidth;
-        mTop = y;
-        mBottom = mTop - mHeight;
-        break;
-    case BottomLeft:
-        mLeft = x;
-        mRight = mLeft + mWidth;
-        mBottom = y;
-        mTop = mBottom + mHeight;
-        break;
-    case BottomRight:
-        mRight = x;
-        mLeft = mRight - mWidth;
-        mBottom = y;
-        mTop = mBottom + mHeight;
-        break;
-    case Center:
-        mLeft = x - mWidth / 2;
-        mRight = mLeft + mWidth;
-        mTop = y + mHeight / 2;
-        mBottom = mTop - mHeight;
-        break;
-    default:
-        break;
+    if (!XPLMWindowIsPoppedOut(mWindowID)) {
+        switch (anchor) {
+        case TopLeft:
+            mLeft = x;
+            mRight = mLeft + mWidth;
+            mTop = y;
+            mBottom = mTop - mHeight;
+            break;
+        case TopRight:
+            mRight = x;
+            mLeft = mRight - mWidth;
+            mTop = y;
+            mBottom = mTop - mHeight;
+            break;
+        case BottomLeft:
+            mLeft = x;
+            mRight = mLeft + mWidth;
+            mBottom = y;
+            mTop = mBottom + mHeight;
+            break;
+        case BottomRight:
+            mRight = x;
+            mLeft = mRight - mWidth;
+            mBottom = y;
+            mTop = mBottom + mHeight;
+            break;
+        case Center:
+            mLeft = x - mWidth / 2;
+            mRight = mLeft + mWidth;
+            mTop = y + mHeight / 2;
+            mBottom = mTop - mHeight;
+            break;
+        default:
+            break;
+        }
+        if (!checkScreenAndPlace())
+            XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
     }
-    if (!checkScreenAndPlace())
-        XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
 }
 
 void ImgWindow::SafePlace(int x, int y, ImgWindow::Anchor anchor)
