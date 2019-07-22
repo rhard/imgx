@@ -847,7 +847,10 @@ void ImgWindow::Resize(int width, int height, ImgWindow::Anchor anchor) {
         default:
             break;
         }
-        XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
+        if (IsInVR())
+            XPLMSetWindowGeometryVR(mWindowID, mWidth, mHeight);
+        else
+            XPLMSetWindowGeometry(mWindowID, mLeft, mTop, mRight, mBottom);
     }
 }
 
