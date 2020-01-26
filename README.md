@@ -5,6 +5,14 @@ Another ImGui port for X-Plane
 [![Build status](https://ci.appveyor.com/api/projects/status/5j47wbf9tibufse8?svg=true)](https://ci.appveyor.com/project/rhard/imgx)
 [![Build Status](https://travis-ci.org/rhard/imgx.svg?branch=master)](https://travis-ci.org/rhard/imgx)
 
+## Licesing Note
+
+These sources are released under the LGPL.
+
+Whilst you can directly link them into your code without other obligations, if
+you improve or alter the code contained within directly, I ask that you make 
+those changes available as per the licese.
+
 ## How to build example plugin from this repository on Ubuntu 16.04 LTS. Same recipe could be used on Windows and Mac OS.
 
 You need to have valid Python 2 or 3, Cmake, GCC or Clang compiler. You also need an OpenGL dev package (ie. *mesa-common-dev*).
