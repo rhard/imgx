@@ -1,3 +1,11 @@
+/*
+ * imgwindow.cpp
+ *
+ * Integration for dear imgui into X-Plane.
+ *
+ * Copyright (C) 2018, Christopher Collins
+*/
+
 /// Another ImGui port for X-Plane
 /// created by Christopher Collins
 /// Modified by Roman Liubich
