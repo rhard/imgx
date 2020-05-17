@@ -260,8 +260,9 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     io.KeyMap[ImGuiKey_Delete] = XPLM_VK_DELETE;
     io.KeyMap[ImGuiKey_Backspace] = XPLM_VK_BACK;
     io.KeyMap[ImGuiKey_Space] = XPLM_VK_SPACE;
-    io.KeyMap[ImGuiKey_Enter] = XPLM_VK_ENTER;
+    io.KeyMap[ImGuiKey_Enter] = XPLM_VK_RETURN;
     io.KeyMap[ImGuiKey_Escape] = XPLM_VK_ESCAPE;
+    io.KeyMap[ImGuiKey_KeyPadEnter] = XPLM_VK_ENTER;
     io.KeyMap[ImGuiKey_A] = XPLM_VK_A;
     io.KeyMap[ImGuiKey_C] = XPLM_VK_C;
     io.KeyMap[ImGuiKey_V] = XPLM_VK_V;
@@ -736,7 +737,7 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
     auto *thisWindow = reinterpret_cast<ImgWindow *>(inRefcon);
     ImGui::SetCurrentContext(thisWindow->mImGuiContext);
     ImGuiIO &io = ImGui::GetIO();
-    if (io.WantCaptureKeyboard) {
+    if (io.WantCaptureKeyboard && !losingFocus) {
         auto vk = static_cast<unsigned char>(inVirtualKey);
         io.KeysDown[vk] = (inFlags & xplm_DownFlag) == xplm_DownFlag;
         io.KeyShift = (inFlags & xplm_ShiftFlag) == xplm_ShiftFlag;
