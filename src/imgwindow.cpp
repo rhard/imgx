@@ -594,15 +594,7 @@ ImgWindow::updateImGui() {
     io.DeltaTime = time - mLastTimeDrawn;
     mLastTimeDrawn = time;
 
-    ImGui::NewFrame();
-
-    PreBuildInterface();
-
-    BuildInterface();
-
-    PostBuildInterface();
-
-    // finally, handle window focus.
+    // Handle window focus.
     int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
     if (io.WantTextInput && !hasKeyboardFocus) {
         XPLMTakeKeyboardFocus(mWindowID);
@@ -612,7 +604,18 @@ ImgWindow::updateImGui() {
         for (auto &key : io.KeysDown) {
             key = false;
         }
+        // Fix SHIFT remains active
+        io.KeyShift = false;
     }
+
+    ImGui::NewFrame();
+
+    PreBuildInterface();
+
+    BuildInterface();
+
+    PostBuildInterface();
+
     mFirstRender = false;
 }
 
@@ -644,13 +647,6 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     ImGui::Render();
 
     thisWindow->renderImGui();
-
-    // Dirty fix of the issue when SHIFT button remains active
-    // Should be called after ImGui::Render
-    auto &io = ImGui::GetIO();
-    if (!io.WantTextInput && XPLMHasKeyboardFocus(thisWindow)) {
-        io.KeyShift = false;
-    }
 }
 
 int ImgWindow::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y,
@@ -744,7 +740,7 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
     auto *thisWindow = reinterpret_cast<ImgWindow *>(inRefcon);
     ImGui::SetCurrentContext(thisWindow->mImGuiContext);
     ImGuiIO &io = ImGui::GetIO();
-    if (io.WantCaptureKeyboard && !losingFocus) {
+    if (io.WantCaptureKeyboard) {
         auto vk = static_cast<unsigned char>(inVirtualKey);
         io.KeysDown[vk] = (inFlags & xplm_DownFlag) == xplm_DownFlag;
         io.KeyShift = (inFlags & xplm_ShiftFlag) == xplm_ShiftFlag;
