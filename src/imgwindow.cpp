@@ -644,6 +644,13 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     ImGui::Render();
 
     thisWindow->renderImGui();
+
+    // Dirty fix of the issue when SHIFT button remains active
+    // Should be called after ImGui::Render
+    auto &io = ImGui::GetIO();
+    if (!io.WantTextInput && XPLMHasKeyboardFocus(thisWindow)) {
+        io.KeyShift = false;
+    }
 }
 
 int ImgWindow::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y,
