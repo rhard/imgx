@@ -23,6 +23,7 @@
 #elif IBM
 
 #include <gl/GL.h>
+#include <imgui_internal.h>
 
 #else
 #include <OpenGL/gl.h>
@@ -594,20 +595,6 @@ ImgWindow::updateImGui() {
     io.DeltaTime = time - mLastTimeDrawn;
     mLastTimeDrawn = time;
 
-    // Handle window focus.
-    int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
-    if (io.WantTextInput && !hasKeyboardFocus) {
-        XPLMTakeKeyboardFocus(mWindowID);
-    } else if (!io.WantTextInput && hasKeyboardFocus) {
-        XPLMTakeKeyboardFocus(nullptr);
-        // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
-        for (auto &key : io.KeysDown) {
-            key = false;
-        }
-        // Fix SHIFT remains active
-        io.KeyShift = false;
-    }
-
     ImGui::NewFrame();
 
     PreBuildInterface();
@@ -640,6 +627,7 @@ void ImgWindow::PreBuildInterface() {
 /// Main loop function to update ImGui and render the window
 void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     auto *thisWindow = reinterpret_cast<ImgWindow *>(inRefcon);
+
     ImGui::SetCurrentContext(thisWindow->mImGuiContext);
 
     thisWindow->updateImGui();
@@ -647,6 +635,26 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     ImGui::Render();
 
     thisWindow->renderImGui();
+
+    thisWindow->keyboardFocusHandler();
+}
+
+void ImgWindow::keyboardFocusHandler() {
+    // Handle window focus.
+    auto &io = ImGui::GetIO();
+    int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
+    if (io.WantCaptureKeyboard && !hasKeyboardFocus) {
+        XPLMTakeKeyboardFocus(mWindowID);
+    } else if (!io.WantCaptureKeyboard && hasKeyboardFocus) {
+        XPLMTakeKeyboardFocus(nullptr);
+        // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
+        for (auto &key : io.KeysDown) {
+            key = false;
+        }
+        // Fix SHIFT remains active
+        io.KeyShift = false;
+        ImGui::ClearActiveID();
+    }
 }
 
 int ImgWindow::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y,
@@ -754,6 +762,10 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
             char smallStr[2] = {inKey, 0};
             io.AddInputCharactersUTF8(smallStr);
         }
+    }
+    if(losingFocus){
+        ImGui::ClearActiveID();
+        ImGui::CaptureKeyboardFromApp(false);
     }
 }
 
