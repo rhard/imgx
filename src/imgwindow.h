@@ -276,6 +276,8 @@ private:
 
     void updateImGui();
 
+    void keyboardFocusHandler();
+
     void boxelsToNative(int x, int y, int &outX, int &outY);
 
     void translateImGuiToBoxel(float inX, float inY, int &outX, int &outY);
@@ -310,6 +312,7 @@ private:
     XPLMWindowPositioningMode mPreferredPositioningMode;
 
     XPLMFlightLoopID flightLoopID;
+
 };
 
 #endif //IMGWINDOW_H

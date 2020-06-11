@@ -23,6 +23,7 @@
 #elif IBM
 
 #include <gl/GL.h>
+#include <imgui_internal.h>
 
 #else
 #include <OpenGL/gl.h>
@@ -260,8 +261,9 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     io.KeyMap[ImGuiKey_Delete] = XPLM_VK_DELETE;
     io.KeyMap[ImGuiKey_Backspace] = XPLM_VK_BACK;
     io.KeyMap[ImGuiKey_Space] = XPLM_VK_SPACE;
-    io.KeyMap[ImGuiKey_Enter] = XPLM_VK_ENTER;
+    io.KeyMap[ImGuiKey_Enter] = XPLM_VK_RETURN;
     io.KeyMap[ImGuiKey_Escape] = XPLM_VK_ESCAPE;
+    io.KeyMap[ImGuiKey_KeyPadEnter] = XPLM_VK_ENTER;
     io.KeyMap[ImGuiKey_A] = XPLM_VK_A;
     io.KeyMap[ImGuiKey_C] = XPLM_VK_C;
     io.KeyMap[ImGuiKey_V] = XPLM_VK_V;
@@ -601,17 +603,6 @@ ImgWindow::updateImGui() {
 
     PostBuildInterface();
 
-    // finally, handle window focus.
-    int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
-    if (io.WantTextInput && !hasKeyboardFocus) {
-        XPLMTakeKeyboardFocus(mWindowID);
-    } else if (!io.WantTextInput && hasKeyboardFocus) {
-        XPLMTakeKeyboardFocus(nullptr);
-        // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
-        for (auto &key : io.KeysDown) {
-            key = false;
-        }
-    }
     mFirstRender = false;
 }
 
@@ -636,6 +627,7 @@ void ImgWindow::PreBuildInterface() {
 /// Main loop function to update ImGui and render the window
 void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     auto *thisWindow = reinterpret_cast<ImgWindow *>(inRefcon);
+
     ImGui::SetCurrentContext(thisWindow->mImGuiContext);
 
     thisWindow->updateImGui();
@@ -643,6 +635,26 @@ void ImgWindow::drawWindowCB(XPLMWindowID inWindowID, void *inRefcon) {
     ImGui::Render();
 
     thisWindow->renderImGui();
+
+    thisWindow->keyboardFocusHandler();
+}
+
+void ImgWindow::keyboardFocusHandler() {
+    // Handle window focus.
+    auto &io = ImGui::GetIO();
+    int hasKeyboardFocus = XPLMHasKeyboardFocus(mWindowID);
+    if (io.WantCaptureKeyboard && !hasKeyboardFocus) {
+        XPLMTakeKeyboardFocus(mWindowID);
+    } else if (!io.WantCaptureKeyboard && hasKeyboardFocus) {
+        XPLMTakeKeyboardFocus(nullptr);
+        // reset keysdown otherwise we'll think any keys used to defocus the keyboard are still down!
+        for (auto &key : io.KeysDown) {
+            key = false;
+        }
+        // Fix SHIFT remains active
+        io.KeyShift = false;
+        ImGui::ClearActiveID();
+    }
 }
 
 int ImgWindow::handleMouseClickCB(XPLMWindowID inWindowID, int x, int y,
@@ -750,6 +762,10 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
             char smallStr[2] = {inKey, 0};
             io.AddInputCharactersUTF8(smallStr);
         }
+    }
+    if(losingFocus){
+        ImGui::ClearActiveID();
+        ImGui::CaptureKeyboardFromApp(false);
     }
 }
 
