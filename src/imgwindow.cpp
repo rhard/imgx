@@ -227,6 +227,7 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     mSelfResize = false;
     mFirstRender = true;
     mDecoration = decoration;
+    mWindowTitle = "Default window title";
 
     auto &io = ImGui::GetIO();
 
