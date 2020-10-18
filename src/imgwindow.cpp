@@ -13,6 +13,7 @@
 #include "XPLMDataAccess.h"
 #include "XPLMGraphics.h"
 #include "XPLMProcessing.h"
+#include "XPLMUtilities.h"
 
 #include "imgwindow.h"
 
@@ -225,8 +226,10 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     mSelfDestruct = false;
     mSelfHide = false;
     mSelfResize = false;
+    mSelfPositioning = false;
     mFirstRender = true;
     mDecoration = decoration;
+    mWindowTitle = "Default window title";
 
     auto &io = ImGui::GetIO();
 
