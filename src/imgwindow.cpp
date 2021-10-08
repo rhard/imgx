@@ -248,8 +248,6 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     io.SetClipboardTextFn = SetClipboardImGuiWrapper;
     io.GetClipboardTextFn = GetClipboardImGuiWrapper;
 
-    // we render ourselves, we don't use the DrawListsFunc
-    io.RenderDrawListsFn = nullptr;
     // set up the Keymap
     io.KeyMap[ImGuiKey_Tab] = XPLM_VK_TAB;
     io.KeyMap[ImGuiKey_LeftArrow] = XPLM_VK_LEFT;
