@@ -13,8 +13,10 @@
 #include "XPLMDataAccess.h"
 #include "XPLMGraphics.h"
 #include "XPLMProcessing.h"
+#include "XPLMUtilities.h"
 
 #include "imgwindow.h"
+#include "imgui_internal.h"
 
 #if LIN
 #include <GL/gl.h>
@@ -23,9 +25,9 @@
 #elif IBM
 
 #include <gl/GL.h>
-#include <imgui_internal.h>
 
 #else
+#define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #endif
 
@@ -226,8 +228,10 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     mSelfDestruct = false;
     mSelfHide = false;
     mSelfResize = false;
+    mSelfPositioning = false;
     mFirstRender = true;
     mDecoration = decoration;
+    mWindowTitle = "Default window title";
 
     auto &io = ImGui::GetIO();
 
@@ -245,8 +249,6 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
     io.SetClipboardTextFn = SetClipboardImGuiWrapper;
     io.GetClipboardTextFn = GetClipboardImGuiWrapper;
 
-    // we render ourselves, we don't use the DrawListsFunc
-    io.RenderDrawListsFn = nullptr;
     // set up the Keymap
     io.KeyMap[ImGuiKey_Tab] = XPLM_VK_TAB;
     io.KeyMap[ImGuiKey_LeftArrow] = XPLM_VK_LEFT;
@@ -475,7 +477,7 @@ ImgWindow::renderImGui() {
             if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+                glBindTexture(GL_TEXTURE_2D, (GLuint)(uintptr_t)pcmd->TextureId);
 
                 // Scissors work in viewport space - must translate the coordinates from ImGui -> Boxels, then Boxels -> Native.
                 //FIXME: it must be possible to apply the scale+transform manually to the projection matrix so we don't need to doublestep.

@@ -33,6 +33,7 @@ FILE(GLOB CPP_SRCS
         imgui/imgui.cpp
         imgui/imgui_draw.cpp
         imgui/imgui_widgets.cpp
+        imgui/imgui_tables.cpp
         )
 
 add_library(imgx_test SHARED ${CPP_SRCS} ${HEADER_SRCS} test/testwindow.cpp test/testwindow.h)
