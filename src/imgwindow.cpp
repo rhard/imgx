@@ -16,6 +16,7 @@
 #include "XPLMUtilities.h"
 
 #include "imgwindow.h"
+#include "imgui_internal.h"
 
 #if LIN
 #include <GL/gl.h>
@@ -24,9 +25,9 @@
 #elif IBM
 
 #include <gl/GL.h>
-#include <imgui_internal.h>
 
 #else
+#define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #endif
 
@@ -476,7 +477,7 @@ ImgWindow::renderImGui() {
             if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+                glBindTexture(GL_TEXTURE_2D, (GLuint)(uintptr_t)pcmd->TextureId);
 
                 // Scissors work in viewport space - must translate the coordinates from ImGui -> Boxels, then Boxels -> Native.
                 //FIXME: it must be possible to apply the scale+transform manually to the projection matrix so we don't need to doublestep.

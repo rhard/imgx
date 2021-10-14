@@ -6,7 +6,7 @@
  *   This is also an example how to use imgx in the final project
  */
 
-#define VERSION_NUMBER "0.1.0"
+#define VERSION_NUMBER "0.1.1"
 
 #include "XPLMDisplay.h"
 #include "XPLMGraphics.h"
@@ -21,6 +21,7 @@
 #elif IBM
 #include <gl/GL.h>
 #else
+#define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #endif
 
