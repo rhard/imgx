@@ -959,7 +959,7 @@ void ImgWindow::MoveForVR() {
     }
 }
 
-bool ImgWindow::IsInVR()
+bool ImgWindow::IsInVR() const
 {
     return mIsInVR;
 }

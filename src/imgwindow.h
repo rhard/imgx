@@ -62,7 +62,7 @@ public:
     /// It is also at this time that the window will be relocated onto the VR
     /// display if the VR headset is in use.
     /// \param inIsVisible True to be displayed, false if the window is to be hidden.
-    virtual void SetVisible(bool inIsVisible);
+    void SetVisible(bool inIsVisible);
 
     /// Returns current window visibility.
     /// \return true if the window is visible, false otherwise
@@ -176,7 +176,7 @@ protected:
 
     /// Check if the windows is in VR
     /// \return true if window is in VR
-    bool IsInVR();
+    bool IsInVR() const;
 
     /// Called before making the window visible. It provides an opportunity
     /// to prevent the window being shown.
