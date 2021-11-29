@@ -756,10 +756,8 @@ void ImgWindow::handleKeyFuncCB(XPLMWindowID inWindowID, char inKey,
         io.KeyShift = (inFlags & xplm_ShiftFlag) == xplm_ShiftFlag;
         io.KeyAlt = (inFlags & xplm_OptionAltFlag) == xplm_OptionAltFlag;
         io.KeyCtrl = (inFlags & xplm_ControlFlag) == xplm_ControlFlag;
-
         if ((inFlags & xplm_DownFlag) == xplm_DownFlag
-                && !io.KeyCtrl
-                && !io.KeyAlt
+                && !(io.KeyCtrl && !io.KeyAlt)
                 && isprint(inKey)) {
             char smallStr[2] = {inKey, 0};
             io.AddInputCharactersUTF8(smallStr);
