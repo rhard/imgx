@@ -345,21 +345,21 @@ void ImgWindow::Init(int width, int height, int x, int y, Anchor anchor,
 
     // check the window is within the screen size (for self decorated)
     if (mDecoration == xplm_WindowDecorationSelfDecorated) {
-        int sLeft, sTop, sRight, sBotoom;
-        XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBotoom);
-        if (mLeft < sLeft) {
+        int sLeft = 0, sTop = 0, sRight = 0, sBottom = 0;
+        XPLMGetScreenBoundsGlobal(&sLeft, &sTop, &sRight, &sBottom);
+        if (mLeft < sLeft || mLeft > sRight) {
             mLeft = sLeft;
             mRight = sLeft + mWidth;
         }
-        if (mRight > sRight) {
+        if (mRight > sRight || mRight < sLeft) {
             mRight = sRight;
             mLeft = sRight - mWidth;
         }
-        if (mBottom < sBotoom) {
-            mBottom = sBotoom;
-            mTop = sBotoom + mHeight;
+        if (mBottom < sBottom || mBottom > sTop) {
+            mBottom = sBottom;
+            mTop = sBottom + mHeight;
         }
-        if (mTop > sTop) {
+        if (mTop > sTop || mTop < sBottom) {
             mTop = sTop;
             mBottom = sTop - mHeight;
         }
